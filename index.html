@@ -32,6 +32,7 @@ input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);bo
 #ppl{display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto}
 #ppl button{--c:#999;white-space:nowrap;padding:3px 11px;font-size:12px;border:1px solid var(--c);border-radius:14px;background:#fff}
 #ppl button.on{background:color-mix(in srgb,var(--c) 28%,#fff);font-weight:600}
+#kfs{display:flex;gap:6px;padding:0 12px 8px;overflow-x:auto}#kfs button{white-space:nowrap;padding:3px 11px;font-size:12px;border:1px solid var(--ln);border-radius:14px;background:#fff}#kfs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .wd,.gr{display:grid;grid-template-columns:repeat(7,1fr)}
 .wd i{font-style:normal;text-align:center;font-size:12px;color:var(--mut);padding:4px 0}
 .r{color:var(--red)!important}
@@ -72,7 +73,7 @@ input[type=color]{height:40px;padding:3px}
 <div id="ap" hidden>
 <nav id="tabs"></nav><div id="hero"></div>
 <div id="bar"><button id="pv">‹</button><button id="mt"></button><button id="nx">›</button><span></span><button id="vw">목록</button><button id="set">설정</button></div>
-<div id="ppl"></div><div id="body"></div><button id="fab" aria-label="일정 추가">＋</button>
+<div id="kfs"></div><div id="ppl"></div><div id="body"></div><button id="fab" aria-label="일정 추가">＋</button>
 </div>
 <dialog id="dlg"></dialog>
 <script type="module">
@@ -99,7 +100,7 @@ const diff=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
 const wk=s=>pd(s).getDay();
 const DOW='일월화수목금토';
 
-let me,U={},G=[],EV={},unsub={},cur='all',Y,M,view='cal',flt=new Set(),stopG;
+let me,U={},G=[],EV={},unsub={},cur='all',Y,M,view='cal',flt=new Set(),kf='all',stopG;
 {const n=new Date();Y=n.getFullYear();M=n.getMonth()}
 
 /* 글꼴 */
@@ -132,14 +133,20 @@ function occ(e,from,to){const L=diff(e.start,e.end),ok=s=>add(s,L)>=from&&s<=to,
   if(s>to||(e.until&&s>e.until))break;
   if(ok(s))r.push(s)}
  return r}
+const kd=(e,g)=>e.kind||(g.personal?'me':'we');
+const sty=it=>{if(it.k!='we')return`--c:${col(it.e.author)}`;const cs=[...it.g.members.filter(m=>m!=me.uid),me.uid].map(col);if(cs.length<2)cs.push(cs[0]);return`--c:${cs[0]};background:linear-gradient(90deg,${cs.map(c=>`color-mix(in srgb,${c} 38%,#fff)`).join(',')})`};
 function items(from,to){const out=[],k=i=>i.e.allDay?'':i.e.st||'';
  (cur=='all'?G:G.filter(g=>g.id==cur)).forEach(g=>(EV[g.id]||[]).forEach(e=>{
   if(flt.size&&!flt.has(e.author))return;
-  occ(e,from,to).forEach(s=>out.push({e,g,s,t:add(s,diff(e.start,e.end))}))}));
+  const kk=kd(e,g),mine=e.author==me.uid;
+  if(kf=='mine'&&!(kk=='me'&&mine))return;
+  if(kf=='theirs'&&!(kk=='me'&&!mine))return;
+  if(kf=='we'&&kk!='we')return;
+  occ(e,from,to).forEach(s=>out.push({e,g,s,k:kk,t:add(s,diff(e.start,e.end))}))}));
  return out.sort((a,b)=>k(a).localeCompare(k(b)))}
 const ddf=s=>{const n=diff(s,iso(new Date()));return n>=0?'♥ D+'+(n+1):'♥ D'+n};
 const col=u=>U[u]?.color||'#999';
-const chip=it=>`<div class="ev" data-e="${it.e.id}" data-g="${it.g.id}" style="--c:${col(it.e.author)}">${it.g.icon||''} ${esc(it.e.title)}</div>`;
+const chip=it=>`<div class="ev" data-e="${it.e.id}" data-g="${it.g.id}" style="${sty(it)}">${it.g.icon||''} ${esc(it.e.title)}</div>`;
 
 /* 화면 그리기 */
 function render(){
@@ -149,6 +156,7 @@ function render(){
  if(g){h.style.backgroundImage=g.header?`url(${g.header})`:'none';h.innerHTML=(g.header?'':esc(g.name))+(g.dday?`<span id="dd">${ddf(g.dday)}</span>`:'')}
  const mem=[...new Set((g?[g]:G).flatMap(x=>x.members))];
  $('#ppl').innerHTML=`<button data-u="" class="${flt.size?'':'on'}">전체</button>`+mem.map(m=>`<button data-u="${m}" class="${flt.has(m)?'on':''}" style="--c:${col(m)}">${esc(U[m]?.name||'?')}</button>`).join('');
+ $('#kfs').innerHTML=[['all','전체'],['mine','내 일정만'],['theirs','상대 일정만'],['we','우리 일정만']].map(([v,t])=>`<button data-k="${v}" class="${kf==v?'on':''}">${t}</button>`).join('');
  $('#mt').textContent=`${Y}년 ${M+1}월`;
  $('#vw').textContent=view=='cal'?'목록':'월간';
  $('#fab').hidden=!g;
@@ -162,14 +170,15 @@ function cal(){
  $('#body').innerHTML=h+'</div>'}
 function lst(){
  const L=items(iso(D(Y,M,1)),iso(D(Y,M+1,0))).sort((a,b)=>a.s.localeCompare(b.s));
- $('#body').innerHTML=L.length?L.map(it=>`<div class="li" data-e="${it.e.id}" data-g="${it.g.id}"><b class="${wk(it.s)==0||isHol(it.s)?'r':''}">${+it.s.slice(8)}<small>${DOW[wk(it.s)]}</small></b><div class="ev" style="--c:${col(it.e.author)}">${it.g.icon||''} ${esc(it.e.title)}<small>${it.e.allDay?'종일':it.e.st+'~'+it.e.et} · ${esc(U[it.e.author]?.name||'')}${it.t!=it.s?' · ~'+it.t.slice(5):''}</small></div></div>`).join(''):'<p class="em">이 달에는 일정이 없어요</p>'}
+ $('#body').innerHTML=L.length?L.map(it=>`<div class="li" data-e="${it.e.id}" data-g="${it.g.id}"><b class="${wk(it.s)==0||isHol(it.s)?'r':''}">${+it.s.slice(8)}<small>${DOW[wk(it.s)]}</small></b><div class="ev" style="${sty(it)}">${it.g.icon||''} ${esc(it.e.title)}<small>${it.e.allDay?'종일':it.e.st+'~'+it.e.et} · ${esc(U[it.e.author]?.name||'')}${it.t!=it.s?' · ~'+it.t.slice(5):''}</small></div></div>`).join(''):'<p class="em">이 달에는 일정이 없어요</p>'}
 
 /* 대화상자 */
 function modal(html){const d=$('#dlg');d.innerHTML=html;d.onclick=e=>{if(e.target.classList.contains('cl'))d.close()};d.showModal();return d}
 function editEv(e,date){
- const ro=cur=='all'||(e&&e.author!=me.uid),x=e||{start:date||iso(new Date()),end:date||iso(new Date()),allDay:true,rep:'none'};
+ const ro=cur=='all'||(e&&e.author!=me.uid),x=e||{start:date||iso(new Date()),end:date||iso(new Date()),allDay:true,rep:'none'},gg=G.find(g=>g.id==(e?e.gid:cur)),kk=e?kd(e,gg):(gg.personal?'me':'we');
  const d=modal(`<form><h3>${e?(ro?'일정':'일정 수정'):'새 일정'}</h3>${e?`<p class="mut">${esc(U[e.author]?.name||'')} · ${esc(G.find(g=>g.id==e.gid)?.name||'')}</p>`:''}
  <fieldset ${ro?'disabled':''}><input name="title" placeholder="제목" value="${esc(x.title||'')}" required>
+ ${gg.personal?'':`<label>구분<select name="kind"><option value="we" ${kk=='we'?'selected':''}>우리 일정 (함께하는 일정)</option><option value="me" ${kk=='me'?'selected':''}>내 일정 (내가 쓴 일정)</option></select></label>`}
  <label>시작일<input type="date" name="start" value="${x.start}" required></label>
  <label>종료일 (여러 날 일정은 마지막 날짜)<input type="date" name="end" value="${x.end}" required></label>
  <label class="ck"><input type="checkbox" name="allDay" ${x.allDay?'checked':''}> 종일</label>
@@ -183,7 +192,7 @@ function editEv(e,date){
  f.start.onchange=()=>{if(f.end.value<f.start.value)f.end.value=f.start.value};
  if($('#del'))$('#del').onclick=async()=>{if(!confirm(x.rep&&x.rep!='none'?'반복 일정 전체가 삭제돼요. 삭제할까요?':'삭제할까요?'))return;try{await deleteDoc(doc(db,'groups',e.gid,'events',e.id));d.close()}catch(z){alert('삭제 실패: '+z.code)}};
  f.onsubmit=async ev=>{ev.preventDefault();
-  const o={title:f.title.value.trim(),start:f.start.value,end:f.end.value,allDay:f.allDay.checked,st:f.st.value,et:f.et.value,rep:f.rep.value,until:f.until.value,memo:f.memo.value,author:me.uid};
+  const o={title:f.title.value.trim(),start:f.start.value,end:f.end.value,allDay:f.allDay.checked,st:f.st.value,et:f.et.value,rep:f.rep.value,until:f.until.value,memo:f.memo.value,author:me.uid,kind:gg.personal?'me':f.kind.value};
   if(o.end<o.start)return alert('종료일이 시작일보다 빨라요');
   try{e?await updateDoc(doc(db,'groups',e.gid,'events',e.id),o):await addDoc(collection(db,'groups',cur,'events'),o);d.close()}catch(z){alert('저장 실패: '+z.code)}}}
 
@@ -222,6 +231,7 @@ function newg(){
 /* 이벤트 연결 */
 $('#tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.id=='addg')return newg();cur=b.dataset.g;flt.clear();render()};
 $('#ppl').onclick=e=>{const b=e.target.closest('button');if(!b)return;const u=b.dataset.u;if(!u)flt.clear();else flt.has(u)?flt.delete(u):flt.add(u);render()};
+$('#kfs').onclick=e=>{const b=e.target.closest('button');if(!b)return;kf=b.dataset.k;render()};
 $('#body').onclick=e=>{const x=e.target.closest('[data-e]');
  if(x){const v=(EV[x.dataset.g]||[]).find(q=>q.id==x.dataset.e);return v&&editEv(v)}
  const c=e.target.closest('.dc');if(c&&cur!='all')editEv(null,c.dataset.d)};
