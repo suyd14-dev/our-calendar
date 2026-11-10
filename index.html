@@ -147,7 +147,7 @@ function items(from,to){const out=[],k=i=>i.e.allDay?'':i.e.st||'';
  return out.sort((a,b)=>k(a).localeCompare(k(b)))}
 const ddf=s=>{const n=diff(s,iso(new Date()));return n>=0?'♥ D+'+(n+1):'♥ D'+n};
 const col=u=>U[u]?.color||'#999';
-const chip=(it,day)=>`<div class="ev cc" data-e="${it.e.id}" data-g="${it.g.id}" style="${sty(it)}"><span class="tt">${it.g.icon||''} ${esc(it.e.title)}</span>${!it.e.allDay&&it.e.st&&day==it.s?`<span class="tm">${it.e.st}</span>`:''}</div>`;
+const chip=(it,day)=>`<div class="ev cc" data-e="${it.e.id}" data-g="${it.g.id}" style="${sty(it)}"><span class="tt">${cur=='all'&&it.g.icon?it.g.icon+' ':''}${esc(it.e.title)}</span>${!it.e.allDay&&it.e.st&&day==it.s?`<span class="tm">${it.e.st}</span>`:''}</div>`;
 
 /* 화면 그리기 */
 function render(){
@@ -171,7 +171,7 @@ function cal(){
  $('#body').innerHTML=h+'</div>'}
 function lst(){
  const L=items(iso(D(Y,M,1)),iso(D(Y,M+1,0))).sort((a,b)=>a.s.localeCompare(b.s));
- $('#body').innerHTML=L.length?L.map(it=>`<div class="li" data-e="${it.e.id}" data-g="${it.g.id}"><b class="${wk(it.s)==0||isHol(it.s)?'r':''}">${+it.s.slice(8)}<small>${DOW[wk(it.s)]}</small></b><div class="ev" style="${sty(it)}">${it.g.icon||''} ${esc(it.e.title)}<small>${it.e.allDay?'종일':it.e.st+'~'+it.e.et} · ${esc(U[it.e.author]?.name||'')}${it.t!=it.s?' · ~'+it.t.slice(5):''}</small></div></div>`).join(''):'<p class="em">이 달에는 일정이 없어요</p>'}
+ $('#body').innerHTML=L.length?L.map(it=>`<div class="li" data-e="${it.e.id}" data-g="${it.g.id}"><b class="${wk(it.s)==0||isHol(it.s)?'r':''}">${+it.s.slice(8)}<small>${DOW[wk(it.s)]}</small></b><div class="ev" style="${sty(it)}">${cur=='all'&&it.g.icon?it.g.icon+' ':''}${esc(it.e.title)}<small>${it.e.allDay?'종일':it.e.st+'~'+it.e.et} · ${esc(U[it.e.author]?.name||'')}${it.t!=it.s?' · ~'+it.t.slice(5):''}</small></div></div>`).join(''):'<p class="em">이 달에는 일정이 없어요</p>'}
 
 /* 대화상자 */
 function modal(html){const d=$('#dlg');d.innerHTML=html;d.onclick=e=>{if(e.target.classList.contains('cl'))d.close()};d.showModal();return d}
