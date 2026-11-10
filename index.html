@@ -41,7 +41,7 @@ input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);bo
 .n{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:10px;font-size:11px;margin:1px}
 .n.t{background:var(--lav);color:#2d1b3a}
 .dc small{font-size:10px;color:var(--mut)}
-.ev{--c:#999;position:relative;font-size:10.5px;line-height:1.35;padding:1px 3px;margin-top:2px;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 16%,#fff);border-radius:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.ev{--c:#999;--fg:var(--ink);position:relative;color:var(--fg);font-size:10.5px;line-height:1.35;padding:1px 3px;margin-top:2px;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 16%,#fff);border-radius:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .cc{display:flex}.cc .tt{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.cc .tm{margin-left:auto;padding-left:4px;flex:0 100 auto;min-width:0;overflow:hidden;color:var(--mut);font-size:9.5px}
 .mm::after{content:'';position:absolute;top:0;right:0;border-top:6px solid var(--mc,#d23b3b);border-left:6px solid transparent}.ev.mm{padding-right:6px}
 .vw{display:grid;gap:10px}.vw p{margin:0}.pc{font-size:12px;padding:2px 10px;border-radius:12px;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 22%,#fff)}
@@ -49,8 +49,9 @@ input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);bo
 .li{display:flex;gap:12px;align-items:center;padding:8px 14px;border-top:1px solid var(--ln);background:#fff}
 .li>b{width:34px;text-align:center;font-size:18px;font-weight:600}
 .li>b small{display:block;font-size:10px;font-weight:400;color:var(--mut)}
-.li .ev{flex:1;font-size:13px;padding:5px 8px;white-space:normal}
+.li .ev{flex:1;font-size:13px;padding:5px 8px;white-space:normal;color:var(--fg,var(--ink))}
 .li .ev small{display:block;font-size:11px;color:var(--mut)}
+.li .ev .memo{display:block;margin-top:5px;padding-top:5px;border-top:1px solid color-mix(in srgb,var(--fg,var(--ink)) 18%,transparent);font-size:12px;line-height:1.5;color:var(--fg,var(--ink));white-space:pre-wrap;overflow-wrap:anywhere}
 .em{text-align:center;color:var(--mut);padding:48px 0}
 #fab{position:fixed;right:18px;bottom:22px;width:54px;height:54px;border-radius:27px;background:var(--blu);color:#fff;font-size:26px;box-shadow:0 4px 14px #2f00ff44}
 dialog{border:0;border-radius:14px;padding:18px;width:min(92vw,420px);max-height:90vh;color:var(--ink)}
@@ -138,7 +139,11 @@ function occ(e,from,to){const L=diff(e.start,e.end),ok=s=>add(s,L)>=from&&s<=to,
   if(ok(s))r.push(s)}
  return r}
 const pt=(e,g)=>e.parts?.length?e.parts:(e.kind=='me'?[e.author]:g.members);
-const sty=it=>{const p=it.p;if(p.length<2)return`--c:${col(p[0])}`;const cs=[...p.filter(m=>m!=me.uid),...p.filter(m=>m==me.uid)].map(col);return`--c:${cs[0]};background:linear-gradient(90deg,${cs.map(c=>`color-mix(in srgb,${c} 38%,#fff)`).join(',')})`};
+// 라벨 배경색의 상대 휘도를 계산해 대비가 더 큰 글자색(검정/흰색)을 선택
+const rgb=h=>{const s=String(h||'#999').replace('#','');return s.length===3?[...s].map(x=>parseInt(x+x,16)):[0,2,4].map(i=>parseInt(s.slice(i,i+2),16))};
+const lum=c=>{const a=c.map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return .2126*a[0]+.7152*a[1]+.0722*a[2]};
+const fgFor=colors=>{const a=colors.reduce((s,c)=>s.map((v,i)=>v+c[i]/colors.length),[0,0,0]),l=lum(a);return 1.05/(l+.05)>(l+.05)/.05?'#fff':'#1d1d22'};
+const sty=it=>{const p=it.p;if(p.length<2){const c=col(p[0]);return`--c:${c};--fg:${fgFor([rgb(c).map(v=>v*.16+255*.84)])}`}const cs=[...p.filter(m=>m!=me.uid),...p.filter(m=>m==me.uid)].map(col);return`--c:${cs[0]};--fg:${fgFor(cs.map(c=>rgb(c).map(v=>v*.38+255*.62)))};background:linear-gradient(90deg,${cs.map(c=>`color-mix(in srgb,${c} 38%,#fff)`).join(',')})`};
 function items(from,to){const out=[],k=i=>i.e.allDay?'':i.e.st||'';
  (cur=='all'?G:G.filter(g=>g.id==cur)).forEach(g=>(EV[g.id]||[]).forEach(e=>{
   const p=pt(e,g);
@@ -171,7 +176,7 @@ function cal(){
  $('#body').innerHTML=h+'</div>'}
 function lst(){
  const L=items(iso(D(Y,M,1)),iso(D(Y,M+1,0))).sort((a,b)=>a.s.localeCompare(b.s));
- $('#body').innerHTML=L.length?L.map(it=>`<div class="li" data-e="${it.e.id}" data-g="${it.g.id}"><b class="${wk(it.s)==0||isHol(it.s)?'r':''}">${+it.s.slice(8)}<small>${DOW[wk(it.s)]}</small></b><div class="ev${it.e.memo?.trim()?' mm':''}" style="${sty(it)}">${cur=='all'&&it.g.icon?it.g.icon+' ':''}${esc(it.e.title)}<small>${it.e.allDay?'종일':it.e.st+'~'+it.e.et} · ${esc(it.p.map(m=>U[m]?.name||'?').join(', '))}${it.t!=it.s?' · ~'+it.t.slice(5):''}</small></div></div>`).join(''):'<p class="em">이 달에는 일정이 없어요</p>'}
+ $('#body').innerHTML=L.length?L.map(it=>`<div class="li" data-e="${it.e.id}" data-g="${it.g.id}"><b class="${wk(it.s)==0||isHol(it.s)?'r':''}">${+it.s.slice(8)}<small>${DOW[wk(it.s)]}</small></b><div class="ev${it.e.memo?.trim()?' mm':''}" style="${sty(it)}">${cur=='all'&&it.g.icon?it.g.icon+' ':''}${esc(it.e.title)}<small>${it.e.allDay?'종일':it.e.st+'~'+it.e.et} · ${esc(it.p.map(m=>U[m]?.name||'?').join(', '))}${it.t!=it.s?' · ~'+it.t.slice(5):''}</small>${it.e.memo?.trim()?`<span class="memo">${esc(it.e.memo)}</span>`:''}</div></div>`).join(''):'<p class="em">이 달에는 일정이 없어요</p>'}
 
 /* 대화상자 */
 function modal(html){const d=$('#dlg');d.innerHTML=html;d.onclick=e=>{if(e.target.classList.contains('cl'))d.close()};if(!d.open)d.showModal();return d}
