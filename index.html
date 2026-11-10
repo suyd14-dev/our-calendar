@@ -61,6 +61,12 @@ input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);bo
 .sk{position:absolute;max-width:none;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none}
 body.deco .sk{pointer-events:auto;touch-action:none;cursor:grab}
 .fg .n.dk:not(.t){text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 -1px 0 #fff,0 1px 0 #fff,-1px 0 0 #fff,1px 0 0 #fff}
+.cwr{position:relative;overflow:hidden;width:fit-content;margin:0 auto;padding:14px;touch-action:none;user-select:none;background:#fff}
+.cst{position:relative;background:repeating-conic-gradient(#f0f0f3 0 25%,#fff 0 50%) 0 0/12px 12px}
+.cst img{display:block;width:100%;height:100%;pointer-events:none}
+.cbx{position:absolute;border:1.5px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.5);cursor:move}
+.cbx i{position:absolute;width:26px;height:26px;background:#fff;border:2px solid var(--blu);border-radius:50%;margin:-13px 0 0 -13px;box-sizing:border-box}
+.cbx i[data-h=nw]{left:0;top:0}.cbx i[data-h=ne]{left:100%;top:0}.cbx i[data-h=sw]{left:0;top:100%}.cbx i[data-h=se]{left:100%;top:100%}
 .sk.sel{outline:1.5px dashed var(--blu);outline-offset:2px}
 body.deco .fg .ev{pointer-events:none;opacity:.5}body.deco .fg small{opacity:.5}
 body.deco #ap{padding-bottom:190px}
@@ -142,16 +148,18 @@ input[type=color]{height:40px;padding:3px}
 </div>
 <div id="dtb" hidden></div>
 <dialog id="dlg"></dialog>
+<dialog id="dlg2"></dialog>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,query,where,getDocs,onSnapshot,writeBatch,orderBy,limit}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,query,where,getDocs,onSnapshot,writeBatch,orderBy,limit}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ▼▼ Firebase 콘솔의 웹 앱 설정값을 여기에 붙여넣으세요 ▼▼ */
 const CFG={apiKey:"AIzaSyCKeLkPWjpnYhBjyuOt5r23N3UfK0EOxts",authDomain:"our-calendar-81a3c.firebaseapp.com",projectId:"our-calendar-81a3c",appId:"1:444260418366:web:29fdc18aa56dd7d71d226f"};
 /* ▲▲ */
 
-const app=initializeApp(CFG),auth=getAuth(app),db=getFirestore(app);
+const app=initializeApp(CFG),auth=getAuth(app);
+let db;try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}catch{db=getFirestore(app)}
 const DOM='@calendar.app';
 const PRE={jinjoo:{name:'연진주',color:'#CEB5D9'},choi:{name:'최 요원',color:'#2F00FF'}};
 const IC=['🌙','💜','💙','🌸','🍀','🏠','💍','🐰','🐻','⭐','🌊','🍑','☕','🎬','✈️','🌿'];
@@ -176,6 +184,41 @@ function drawNd(L){L=L||nlist();
 const mkRead=async(ids)=>{const u=U[me.uid],up={};ids.forEach(n=>{up['nRead.'+n.id]=n.t;u.nRead={...(u.nRead||{}),[n.id]:n.t}});try{await updateDoc(doc(db,'users',me.uid),up)}catch{}drawBell()};
 const readAll=async()=>{const L=nlist(),u=U[me.uid],t=Math.max(Date.now(),...L.map(n=>n.t));u.nAll=t;u.nRead={};try{await updateDoc(doc(db,'users',me.uid),{nAll:t,nRead:{}})}catch{}drawBell()};
 const ping=(e,os,d)=>{const b=collection(db,'groups',e.gid,'notifs'),o={actor:me.uid,eid:e.id,occ:os,title:e.title||'',t:Date.now(),...d};try{d.type=='react'?setDoc(doc(b,'r_'+me.uid+'_'+e.id+'_'+os),o).catch(()=>{}):addDoc(b,o).catch(()=>{})}catch{}};
+/* ===== 이미지 자르기 ===== */
+function cropImg(file){return new Promise(res=>{
+ const dl=$('#dlg2'),url=URL.createObjectURL(file),im=new Image();
+ im.onerror=()=>res(undefined);
+ im.onload=()=>{
+  const nw=im.naturalWidth,nh=im.naturalHeight,k=Math.min(Math.min(300,innerWidth-100)/nw,300/nh),dw=Math.round(nw*k),dh=Math.round(nh*k);
+  dl.innerHTML=`<div class="vw"><h3>이미지 자르기</h3><div class="tl" id="ar">${[['','자유'],['1','1:1'],['0.75','3:4'],['1.3333','4:3']].map(([v,t],i)=>`<button type="button" data-a="${v}" class="${i?'':'on'}">${t}</button>`).join('')}</div><div class="cwr" id="cwr"><div class="cst" id="cst" style="width:${dw}px;height:${dh}px"><img src="${url}" alt="" draggable="false"><div class="cbx" id="cbx"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div></div></div><p class="mut">틀을 끌어 옮기고, 모서리를 당기거나 두 손가락으로 크기를 조절하세요</p><div class="bt"><button type="button" id="ccx" class="cl">취소</button><button type="button" id="cok" class="pr">적용</button></div></div>`;
+  let box={x:dw*.1,y:dh*.1,w:dw*.8,h:dh*.8},asp=0,done=false;
+  const bx=dl.querySelector('#cbx'),cst=dl.querySelector('#cst'),wr=dl.querySelector('#cwr'),MIN=28;
+  const draw=()=>{bx.style.left=box.x+'px';bx.style.top=box.y+'px';bx.style.width=box.w+'px';bx.style.height=box.h+'px'};
+  const fit=()=>{if(!asp)return;let w=box.w,h=box.w/asp;if(h>dh){h=dh;w=h*asp}if(w>dw){w=dw;h=w/asp}const cx=box.x+box.w/2,cy=box.y+box.h/2;box={x:clamp(cx-w/2,0,dw-w),y:clamp(cy-h/2,0,dh-h),w,h}};
+  const close=v=>{if(done)return;done=true;dl.close();res(v)};
+  dl.addEventListener('close',()=>{if(!done){done=true;res(null)}},{once:true});
+  draw();
+  dl.querySelector('#ar').onclick=e=>{const b=e.target.closest('button');if(!b)return;asp=+b.dataset.a||0;dl.querySelectorAll('#ar button').forEach(x=>x.classList.toggle('on',x==b));fit();draw()};
+  const P=new Map();let mode=null,st=null;
+  const rel=e=>{const r=cst.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+  wr.onpointerdown=e=>{e.preventDefault();try{wr.setPointerCapture(e.pointerId)}catch{}P.set(e.pointerId,rel(e));
+   if(P.size==2){const[a,b]=[...P.values()];mode='pinch';st={b:{...box},d:Math.hypot(b.x-a.x,b.y-a.y)||1};return}
+   const h=e.target.closest('[data-h]');
+   if(h){const c=h.dataset.h;mode='resize';st={ax:c.includes('w')?box.x+box.w:box.x,ay:c.includes('n')?box.y+box.h:box.y}}
+   else if(e.target.closest('#cbx')){const p=rel(e);mode='move';st={ox:p.x-box.x,oy:p.y-box.y}}
+   else mode=null};
+  wr.onpointermove=e=>{if(!P.has(e.pointerId))return;const p=rel(e);P.set(e.pointerId,p);
+   if(mode=='pinch'&&P.size>=2){const[a,b]=[...P.values()],s=Math.hypot(b.x-a.x,b.y-a.y)/st.d,cx=st.b.x+st.b.w/2,cy=st.b.y+st.b.h/2;let w=clamp(st.b.w*s,MIN,dw),h=clamp(st.b.h*s,MIN,dh);if(asp){h=w/asp;if(h>dh){h=dh;w=h*asp}}box={x:clamp(cx-w/2,0,dw-w),y:clamp(cy-h/2,0,dh-h),w,h};draw();return}
+   if(mode=='move'){box.x=clamp(p.x-st.ox,0,dw-box.w);box.y=clamp(p.y-st.oy,0,dh-box.h);draw()}
+   else if(mode=='resize'){const px=clamp(p.x,0,dw),py=clamp(p.y,0,dh);let w=Math.abs(px-st.ax),h=Math.abs(py-st.ay);
+    if(asp){if(w/asp>h)h=w/asp;else w=h*asp;const mw=px<st.ax?st.ax:dw-st.ax,mh=py<st.ay?st.ay:dh-st.ay;if(w>mw){w=mw;h=w/asp}if(h>mh){h=mh;w=h*asp}}
+    w=Math.max(w,MIN);h=Math.max(h,MIN);
+    box={x:px<st.ax?st.ax-w:st.ax,y:py<st.ay?st.ay-h:st.ay,w,h};box.x=clamp(box.x,0,dw-box.w);box.y=clamp(box.y,0,dh-box.h);draw()}};
+  wr.onpointerup=wr.onpointercancel=e=>{P.delete(e.pointerId);if(P.size<2&&mode=='pinch')mode=null;if(!P.size)mode=null};
+  dl.querySelector('#cok').onclick=()=>{const kx=nw/dw,ky=nh/dh,sx=box.x*kx,sy=box.y*ky,sw=box.w*kx,sh=box.h*ky,sc=Math.min(1,1024/Math.max(sw,sh)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(sw*sc));c.height=Math.max(1,Math.round(sh*sc));c.getContext('2d').drawImage(im,sx,sy,sw,sh,0,0,c.width,c.height);c.toBlob(b=>close(b),'image/png')};
+  dl.querySelector('#ccx').onclick=()=>close(null);
+  dl.showModal()};
+ im.src=url})}
 /* ===== 칸 꾸미기 ===== */
 let deco=false,sel=null,dragging=false,pendR=false,DC={},SKM={},URLS={},unsubS={},unsubD=[],dkey='',libRedraw=null;
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -218,7 +261,7 @@ function pickSticker(date,pos){
  $('#mg').onclick=()=>{mg=!mg;$('#mg').classList.toggle('on',mg);drawLib()};
  $('#up1').onclick=()=>$('#pf').click();
  $('#pf').onchange=async()=>{const f=$('#pf').files[0];if(!f)return;
-  try{let u;if(f.type=='image/gif'){u=await new Promise((ok,no)=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=no;fr.readAsDataURL(f)});if(u.length>390000){alert('GIF 용량이 너무 커요. 약 290KB 이하만 올릴 수 있어요. (현재 약 '+Math.round(f.size/1024)+'KB)');$('#pf').value='';return}}else u=await simg(f,300);
+  try{let u;if(f.type=='image/gif'){u=await new Promise((ok,no)=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=no;fr.readAsDataURL(f)});if(u.length>390000){alert('GIF 용량이 너무 커요. 약 290KB 이하만 올릴 수 있어요. (현재 약 '+Math.round(f.size/1024)+'KB)');$('#pf').value='';return}}else{const cb=await cropImg(f);if(cb===null){$('#pf').value='';return}u=await simg(cb||f,300)}
   const r=await addDoc(collection(db,'groups',gid,'stickers'),{img:u,author:me.uid,t:Date.now(),kind:'img'});await place(gid,date,r.id,pos)}catch(zz){alert('이미지를 올릴 수 없어요'+(zz?.code?': '+zz.code:''))}$('#pf').value=''};
  $('#dr').onclick=()=>paint(gid,date,pos)}
 function paint(gid,date,pos){
@@ -388,7 +431,7 @@ function viewEv(e,os){
   if(b.classList.contains('ec')){ed=b.dataset.c;return drawCm()}
   if(confirm('댓글을 삭제할까요?'))try{await deleteDoc(doc(db,...base,'comments',b.dataset.c))}catch(z){alert('삭제 실패: '+z.code)}};
  $('#ci').onclick=()=>$('#cfile').click();
- $('#cfile').onchange=async()=>{const f=$('#cfile').files[0];if(!f)return;try{img=await stk(f);$('#cpv').innerHTML=`<img class="stk" src="${img}" alt=""><button type="button" class="x" id="cx">✕</button>`}catch{alert('이미지를 불러올 수 없어요')}$('#cfile').value=''};
+ $('#cfile').onchange=async()=>{const f=$('#cfile').files[0];if(!f)return;try{if(f.type=='image/gif'){img=await new Promise((ok,no)=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=no;fr.readAsDataURL(f)});if(img.length>275000){const kb=Math.round(f.size/1024);img=null;$('#cfile').value='';return alert('댓글 GIF는 약 200KB 이하만 올릴 수 있어요. (현재 약 '+kb+'KB)')}}else{const cb=await cropImg(f);if(cb===null){$('#cfile').value='';return}img=await stk(cb||f)}$('#cpv').innerHTML=`<img class="stk" src="${img}" alt=""><button type="button" class="x" id="cx">✕</button>`}catch{alert('이미지를 불러올 수 없어요')}$('#cfile').value=''};
  $('#cpv').onclick=e=>{if(e.target.id=='cx'){img=null;$('#cpv').innerHTML=''}};
  const send=async()=>{const t=$('#ct').value.trim();if(!t&&!img)return;try{await addDoc(cref('comments'),{author:me.uid,occ:os,text:t,img:img||'',t:Date.now()});ping(e,os,{type:'cmt',text:t.slice(0,80),img:!!img});$('#ct').value='';img=null;$('#cpv').innerHTML=''}catch(z){alert('등록 실패: '+z.code)}};
  $('#cs').onclick=send;$('#ct').onkeydown=e=>{if(e.key=='Enter'&&!e.isComposing){e.preventDefault();send()}};
