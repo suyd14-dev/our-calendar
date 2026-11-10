@@ -52,10 +52,31 @@ input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);bo
 .wd,.gr{display:grid;grid-template-columns:repeat(7,1fr)}
 .wd i{font-style:normal;text-align:center;font-size:12px;color:var(--mut);padding:4px 0}
 .r{color:var(--red)!important}
-.dc{min-height:78px;border-top:1px solid var(--ln);padding:2px;overflow:hidden;background:#fff}
+.dc{min-height:78px;border-top:1px solid var(--ln);padding:2px;overflow:hidden;background:#fff;position:relative}
 .wk{position:relative;border-top:1px solid var(--ln)}
-.bg{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7,1fr)}
-.bg .dc{min-height:0;border:0;padding:0}
+.bg{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7,1fr);isolation:isolate}
+.bg .dc{min-height:0;border:0;padding:0;position:relative}
+.dl{position:absolute;left:0;top:0;width:100%;padding-bottom:100%;pointer-events:none}
+.sk{position:absolute;max-width:none;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none}
+body.deco .sk{pointer-events:auto;touch-action:none;cursor:grab}
+.sk.sel{outline:1.5px dashed var(--blu);outline-offset:2px}
+body.deco .fg .ev{pointer-events:none;opacity:.5}body.deco .fg small{opacity:.5}
+body.deco #ap{padding-bottom:190px}
+#dcb{border:1px solid var(--ln);background:#fff;font-size:12px}#dcb.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+#dtb{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(96vw,460px);background:#fff;border:1px solid var(--ln);border-radius:14px;box-shadow:0 6px 20px #0003;padding:8px;z-index:30;display:grid;gap:6px}
+#dtb .r1,#dtb .r2{display:flex;gap:4px}
+#dtb button{flex:1;border:1px solid var(--ln);border-radius:8px;padding:7px 4px;font-size:12px;background:#fff;white-space:nowrap}
+#dtb .pr{background:var(--ink);color:#fff;border-color:var(--ink)}#dtb .dg{color:var(--red);margin:0;padding:7px 4px}
+#dtb p{font-size:12px;color:var(--mut);text-align:center;padding:2px 0}
+.lib{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:42vh;overflow-y:auto;padding:4px}
+.lbi{position:relative;aspect-ratio:1;border:1px solid var(--ln);border-radius:8px;background:repeating-conic-gradient(#f0f0f3 0 25%,#fff 0 50%) 0 0/12px 12px;display:grid;place-items:center;padding:4px;cursor:pointer}
+.lbi img{max-width:100%;max-height:100%;pointer-events:none}
+.lbi .xx{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;width:20px;height:20px;border-radius:10px;font-size:11px;line-height:20px;text-align:center}
+.pad{border:1px solid var(--ln);border-radius:8px;background:repeating-conic-gradient(#f0f0f3 0 25%,#fff 0 50%) 0 0/16px 16px;overflow:hidden}
+.pad canvas{display:block;width:100%;aspect-ratio:1;touch-action:none;cursor:crosshair}
+.sw{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.sw button{width:26px;height:26px;border-radius:13px;border:2px solid #fff;box-shadow:0 0 0 1px var(--ln)}.sw button.on{box-shadow:0 0 0 2px var(--blu)}
+.tl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tl button{border:1px solid var(--ln);border-radius:8px;padding:7px 10px;font-size:12px;background:#fff}.tl button.on{background:#f0eefe;border-color:var(--blu)}
 .fg{position:relative;display:grid;grid-template-columns:repeat(7,1fr);align-content:start;min-height:78px;padding-bottom:2px;pointer-events:none}
 .fg .n{justify-self:start;margin:3px}.n.o{opacity:.4}
 .fg .ev{pointer-events:auto;margin:2px 2px 0}
@@ -114,9 +135,10 @@ input[type=color]{height:40px;padding:3px}
 <button>로그인</button><p id="le"></p></form></div>
 <div id="ap" hidden>
 <div id="top"><nav id="tabs"></nav><button id="bell" aria-label="알림"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a1.5 1.5 0 0 0-1.5 1.5v.7C7.9 4.9 6 7.2 6 10v4.2l-1.7 2.3A1 1 0 0 0 5.1 18h13.8a1 1 0 0 0 .8-1.5L18 14.2V10c0-2.8-1.9-5.1-4.5-5.8v-.7A1.5 1.5 0 0 0 12 2zm-2.6 17a2.6 2.6 0 0 0 5.2 0H9.4z"/></svg><i id="bd" hidden></i></button><div id="nd" hidden></div></div><div id="hero"></div>
-<div id="bar"><button id="pv">‹</button><button id="mt"></button><button id="nx">›</button><button id="td">오늘</button><span></span><button id="vw">목록</button><button id="set">설정</button></div>
+<div id="bar"><button id="pv">‹</button><button id="mt"></button><button id="nx">›</button><button id="td">오늘</button><span></span><button id="dcb">꾸미기</button><button id="vw">목록</button><button id="set">설정</button></div>
 <div id="ppl"></div><div id="body"></div><button id="fab" aria-label="일정 추가">＋</button>
 </div>
+<div id="dtb" hidden></div>
 <dialog id="dlg"></dialog>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -152,6 +174,67 @@ function drawNd(L){L=L||nlist();
 const mkRead=async(ids)=>{const u=U[me.uid],up={};ids.forEach(n=>{up['nRead.'+n.id]=n.t;u.nRead={...(u.nRead||{}),[n.id]:n.t}});try{await updateDoc(doc(db,'users',me.uid),up)}catch{}drawBell()};
 const readAll=async()=>{const L=nlist(),u=U[me.uid],t=Math.max(Date.now(),...L.map(n=>n.t));u.nAll=t;u.nRead={};try{await updateDoc(doc(db,'users',me.uid),{nAll:t,nRead:{}})}catch{}drawBell()};
 const ping=(e,os,d)=>{const b=collection(db,'groups',e.gid,'notifs'),o={actor:me.uid,eid:e.id,occ:os,title:e.title||'',t:Date.now(),...d};try{d.type=='react'?setDoc(doc(b,'r_'+me.uid+'_'+e.id+'_'+os),o).catch(()=>{}):addDoc(b,o).catch(()=>{})}catch{}};
+/* ===== 칸 꾸미기 ===== */
+let deco=false,sel=null,dragging=false,pendR=false,DC={},SKM={},URLS={},unsubS={},unsubD=[],dkey='',libRedraw=null;
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const selP=()=>cur=='all'?null:(DC[cur]||[]).find(p=>p.id==sel);
+function subDeco(from,to){const gs=cur=='all'?G:G.filter(g=>g.id==cur),key=gs.map(g=>g.id).join()+from+to;if(key==dkey)return;dkey=key;unsubD.forEach(f=>f());unsubD=[];
+ gs.forEach(g=>unsubD.push(onSnapshot(query(collection(db,'groups',g.id,'deco'),where('date','>=',from),where('date','<=',to)),q=>{DC[g.id]=q.docs.map(d=>({id:d.id,gid:g.id,...d.data()}));render()},()=>{})))}
+function loadSk(gid,q){const m={};q.docs.forEach(d=>{const v=d.data();if(!okImg(v.img))return;m[d.id]={id:d.id,...v};
+  if(!URLS[d.id])fetch(v.img).then(r=>r.blob()).then(b=>{URLS[d.id]=URL.createObjectURL(b);render()}).catch(()=>{})});SKM[gid]=m;libRedraw&&libRedraw();render()}
+function updateDeco(){const b=$('#dtb');b.hidden=!deco;$('#dcb').classList.toggle('on',deco);$('#dcb').textContent=deco?'꾸미기 끝':'꾸미기';document.body.classList.toggle('deco',deco);if(!deco)return;
+ b.innerHTML=selP()?`<div class="r1"><button data-k="top">⤒ 맨 위로</button><button data-k="up">↑ 위로</button><button data-k="down">↓ 아래로</button><button data-k="bot">⤓ 맨 밑으로</button></div><div class="r1"><button data-k="sm">－ 작게</button><button data-k="lg">＋ 크게</button><button data-k="rl">↺ 회전</button><button data-k="rr">↻ 회전</button></div><div class="r2"><button data-k="add">＋ 스티커 추가</button><button data-k="del" class="dg">🗑 삭제</button><button data-k="done" class="pr">완료</button></div>`
+ :`<p>빈 곳을 눌러 스티커를 놓고, 스티커를 눌러 편집하세요</p><div class="r2"><button data-k="done" class="pr">꾸미기 끝</button></div>`}
+async function zmove(p,k){const L=(DC[p.gid]||[]).filter(q=>q.date==p.date).sort((a,b)=>(a.z||0)-(b.z||0)||a.t-b.t),i=L.findIndex(q=>q.id==p.id);
+ if(k=='top')L.push(L.splice(i,1)[0]);else if(k=='bot')L.unshift(L.splice(i,1)[0]);
+ else if(k=='up'&&i<L.length-1)[L[i],L[i+1]]=[L[i+1],L[i]];else if(k=='down'&&i>0)[L[i],L[i-1]]=[L[i-1],L[i]];
+ const bt=writeBatch(db);let n=0;L.forEach((q,j)=>{if(q.z!==j+1){bt.update(doc(db,'groups',p.gid,'deco',q.id),{z:j+1});n++}});if(n)await bt.commit()}
+async function place(gid,date,sid,pos){const z=Math.max(0,...(DC[gid]||[]).filter(p=>p.date==date).map(p=>p.z||0))+1;
+ try{const r=await addDoc(collection(db,'groups',gid,'deco'),{date,sid,x:pos.x,y:pos.y,w:.5,rot:0,z,author:me.uid,t:Date.now()});sel=r.id;$('#dlg').close();render()}catch(zz){alert('놓기 실패: '+zz.code)}}
+function simg(file,mx){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>{const k=Math.min(1,mx/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(i.width*k));c.height=Math.max(1,Math.round(i.height*k));c.getContext('2d').drawImage(i,0,0,c.width,c.height);let u=c.toDataURL('image/webp',.88);if(u.length>380000)u=c.toDataURL('image/webp',.55);u.length>390000?no():ok(u)};i.onerror=no;i.src=URL.createObjectURL(file)})}
+function pickSticker(date,pos){
+ const gid=cur;let mg=false;
+ const d=modal(`<div class="vw"><h3>스티커 고르기</h3><p class="mut">${fd(date)} 칸에 놓아요</p>
+ <div class="tl"><button type="button" id="up1">＋ 이미지 불러오기</button><button type="button" id="dr">✏️ 직접 그리기</button><button type="button" id="mg">보관함 정리</button></div>
+ <input type="file" id="pf" accept="image/*" hidden><div class="lib" id="plb"></div><div class="bt"><button type="button" class="cl">닫기</button></div></div>`);
+ const drawLib=()=>{const L=Object.values(SKM[gid]||{}).filter(x=>!x.hidden).sort((a,b)=>b.t-a.t);$('#plb').innerHTML=L.map(x=>`<div class="lbi" data-s="${x.id}"><img src="${x.img}" alt="">${mg?`<span class="xx" data-x="${x.id}">✕</span>`:''}</div>`).join('')||'<p class="mut" style="grid-column:1/-1;text-align:center;padding:18px 0">보관함이 비어 있어요. 이미지를 불러오거나 직접 그려보세요</p>'};
+ drawLib();libRedraw=drawLib;d.addEventListener('close',()=>{libRedraw=null},{once:true});
+ $('#plb').onclick=async e=>{const x=e.target.closest('[data-x]');
+  if(x){if(!confirm('보관함에서만 지워져요. 이미 달력에 놓은 스티커는 그대로 남아요. 지울까요?'))return;
+   try{await updateDoc(doc(db,'groups',gid,'stickers',x.dataset.x),{hidden:true})}catch(zz){alert('삭제 실패: '+zz.code)}return}
+  const it=e.target.closest('.lbi');if(it&&!mg)place(gid,date,it.dataset.s,pos)};
+ $('#mg').onclick=()=>{mg=!mg;$('#mg').classList.toggle('on',mg);drawLib()};
+ $('#up1').onclick=()=>$('#pf').click();
+ $('#pf').onchange=async()=>{const f=$('#pf').files[0];if(!f)return;
+  try{const u=await simg(f,300),r=await addDoc(collection(db,'groups',gid,'stickers'),{img:u,author:me.uid,t:Date.now(),kind:'img'});await place(gid,date,r.id,pos)}catch(zz){alert('이미지를 올릴 수 없어요'+(zz?.code?': '+zz.code:''))}$('#pf').value=''};
+ $('#dr').onclick=()=>paint(gid,date,pos)}
+function paint(gid,date,pos){
+ const S=360,d=modal(`<div class="vw"><h3>그림 그리기</h3><div class="pad"><canvas id="cv" width="${S}" height="${S}"></canvas></div>
+ <div class="tl"><button type="button" id="tp" class="on">펜</button><button type="button" id="te">지우개</button><button type="button" id="tu">되돌리기</button><button type="button" id="tc">전체 지우기</button></div>
+ <div class="sw">${['#1d1d22','#ffffff','#d23b3b','#f08a3c','#f5c542','#4caf50','#2F00FF','#CEB5D9','#ff8fb1'].map((c,i)=>`<button type="button" data-c="${c}" style="background:${c}" class="${i?'':'on'}"></button>`).join('')}<input type="color" id="pc" value="#1d1d22" style="width:38px;height:30px;padding:1px"></div>
+ <label>굵기<input type="range" id="ps" min="2" max="40" value="8" style="padding:0"></label>
+ <div class="bt"><button type="button" class="cl">취소</button><button type="button" id="sv" class="pr">보관함에 저장</button></div></div>`);
+ const cv=$('#cv'),cx=cv.getContext('2d');cx.lineCap='round';cx.lineJoin='round';
+ let col='#1d1d22',er=false,on=false,last=null;const hist=[];
+ const snap=()=>{hist.push(cx.getImageData(0,0,S,S));if(hist.length>25)hist.shift()};
+ const pt=e=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*S/r.width,y:(e.clientY-r.top)*S/r.height}};
+ const stroke=(a,b)=>{cx.globalCompositeOperation=er?'destination-out':'source-over';cx.strokeStyle=col;cx.lineWidth=+$('#ps').value;cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke()};
+ cv.onpointerdown=e=>{e.preventDefault();cv.setPointerCapture(e.pointerId);snap();on=true;last=pt(e);stroke(last,{x:last.x+.01,y:last.y+.01})};
+ cv.onpointermove=e=>{if(!on)return;const p=pt(e);stroke(last,p);last=p};
+ cv.onpointerup=cv.onpointercancel=()=>{on=false};
+ const tool=m=>{er=m;$('#tp').classList.toggle('on',!m);$('#te').classList.toggle('on',m)};
+ $('#tp').onclick=()=>tool(false);$('#te').onclick=()=>tool(true);
+ $('#tu').onclick=()=>{if(hist.length)cx.putImageData(hist.pop(),0,0)};
+ $('#tc').onclick=()=>{snap();cx.globalCompositeOperation='source-over';cx.clearRect(0,0,S,S)};
+ d.querySelector('.sw').onclick=e=>{const b=e.target.closest('button[data-c]');if(!b)return;col=b.dataset.c;tool(false);d.querySelectorAll('.sw button').forEach(x=>x.classList.toggle('on',x==b));$('#pc').value=col};
+ $('#pc').oninput=e=>{col=e.target.value;tool(false);d.querySelectorAll('.sw button').forEach(x=>x.classList.remove('on'))};
+ $('#sv').onclick=async()=>{const im=cx.getImageData(0,0,S,S).data;let x0=S,y0=S,x1=-1,y1=-1;
+  for(let y=0;y<S;y++)for(let x=0;x<S;x++)if(im[(y*S+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+  if(x1<0)return alert('그림을 먼저 그려주세요');
+  x0=Math.max(0,x0-4);y0=Math.max(0,y0-4);x1=Math.min(S-1,x1+4);y1=Math.min(S-1,y1+4);
+  const c=document.createElement('canvas');c.width=x1-x0+1;c.height=y1-y0+1;c.getContext('2d').drawImage(cv,x0,y0,c.width,c.height,0,0,c.width,c.height);
+  const u=c.toDataURL('image/webp',.9);
+  try{const r=await addDoc(collection(db,'groups',gid,'stickers'),{img:u,author:me.uid,t:Date.now(),kind:'draw'});await place(gid,date,r.id,pos)}catch(zz){alert('저장 실패: '+zz.code)}}}
 let vstop=[];const stopV=()=>{vstop.forEach(f=>f());vstop=[]};
 const tf=t=>{const d=new Date(t);return`${P(d.getMonth()+1)}.${P(d.getDate())} ${P(d.getHours())}:${P(d.getMinutes())}`};
 const okImg=s=>/^data:image\/(png|webp|jpeg|gif);base64,[A-Za-z0-9+\/=]+$/.test(s||'');
@@ -214,7 +297,7 @@ const col=u=>U[u]?.color||'#999';
 
 /* 화면 그리기 */
 const applyMc=()=>document.documentElement.style.setProperty('--mc',U[me?.uid]?.memoColor||'#d23b3b');
-function render(){applyMc();drawBell();
+function render(){if(dragging){pendR=true;return}applyMc();drawBell();
  const g=G.find(x=>x.id==cur);
  $('#tabs').innerHTML=`<button data-g="all" class="${cur=='all'?'on':''}">전체</button>`+G.map(x=>`<button data-g="${x.id}" class="${cur==x.id?'on':''}">${x.icon||''} ${esc(x.name)}</button>`).join('')+'<button id="addg">＋ 그룹</button>';
  const h=$('#hero');h.hidden=!g;
@@ -223,10 +306,13 @@ function render(){applyMc();drawBell();
  $('#ppl').innerHTML=`<button data-u="" class="${flt.size?'':'on'}">전체</button>`+mem.map(m=>`<button data-u="${m}" class="${flt.has(m)?'on':''}" style="--c:${col(m)}">${esc(U[m]?.name||'?')}</button>`).join('');
  $('#mt').textContent=`${Y}년 ${M+1}월`;
  $('#vw').textContent=view=='cal'?'목록':'월간';
- $('#fab').hidden=!g;
+ if(cur=='all'||view!='cal'||!G.length)deco=false;$('#dcb').hidden=cur=='all'||view!='cal';$('#fab').hidden=!g||deco;updateDeco();
  if(!G.length)$('#body').innerHTML='<p class="em">위의 ＋ 그룹을 눌러 첫 그룹을 만들어 보세요</p>';else view=='cal'?cal():lst()}
 function cal(){
  const f=D(Y,M,1);f.setDate(1-f.getDay());const from=iso(f),today=iso(new Date()),all=items(from,add(from,41));
+ subDeco(from,add(from,41));
+ const dm={};(cur=='all'?G:G.filter(g=>g.id==cur)).forEach(g=>(DC[g.id]||[]).forEach(p=>{const u=URLS[p.sid];if(u&&SKM[g.id]?.[p.sid])(dm[p.date]=dm[p.date]||[]).push({...p,u})}));
+ const dls=s=>`<div class="dl">${(dm[s]||[]).sort((a,b)=>(a.z||0)-(b.z||0)||a.t-b.t).map(p=>`<img class="sk${p.id==sel?' sel':''}" data-p="${p.id}" src="${p.u}" alt="" draggable="false" style="left:${p.x*100}%;top:${p.y*100}%;width:${p.w*100}%;transform:translate(-50%,-50%) rotate(${p.rot||0}deg);z-index:${p.z||1}">`).join('')}</div>`;
  let h='<div class="wd">'+[...DOW].map((c,i)=>`<i class="${i?'':'r'}">${c}</i>`).join('')+'</div>';
  for(let w=0;w<6;w++){
   const ws=add(from,w*7),we=add(ws,6),days=[0,1,2,3,4,5,6].map(i=>add(ws,i));
@@ -236,7 +322,7 @@ function cal(){
    if(l>2){for(let k=g.a;k<=g.b;k++)hid[k]++;return}
    const it=g.it;
    bars+=`<div class="ev cc${mem(it)?' mm':''}${it.s<ws?' pl':''}${it.t>we?' nx':''}" data-e="${it.e.id}" data-g="${it.g.id}" data-s="${it.s}" style="grid-column:${g.a+1}/${g.b+2};grid-row:${l+2};${sty(it)}"><span class="tt">${cur=='all'&&it.g.icon?it.g.icon+' ':''}${esc(it.e.title)}</span>${!it.e.allDay&&it.e.st&&it.s>=ws?`<span class="tm">${it.e.st}</span>`:''}</div>`});
-  h+=`<div class="wk"><div class="bg">${days.map(s=>`<div class="dc ${pd(s).getMonth()!=M?'o':''}" data-d="${s}"></div>`).join('')}</div><div class="fg">`+days.map((s,i)=>`<span class="n ${wk(s)==0||isHol(s)?'r':''} ${s==today?'t':''} ${pd(s).getMonth()!=M?'o':''}" style="grid-column:${i+1};grid-row:1">${pd(s).getDate()}</span>`).join('')+bars+hid.map((n,i)=>n?`<small style="grid-column:${i+1};grid-row:5">+${n}</small>`:'').join('')+'</div></div>'}
+  h+=`<div class="wk"><div class="bg">${days.map(s=>`<div class="dc ${pd(s).getMonth()!=M?'o':''}" data-d="${s}">${dls(s)}</div>`).join('')}</div><div class="fg">`+days.map((s,i)=>`<span class="n ${wk(s)==0||isHol(s)?'r':''} ${s==today?'t':''} ${pd(s).getMonth()!=M?'o':''}" style="grid-column:${i+1};grid-row:1">${pd(s).getDate()}</span>`).join('')+bars+hid.map((n,i)=>n?`<small style="grid-column:${i+1};grid-row:5">+${n}</small>`:'').join('')+'</div></div>'}
  $('#body').innerHTML=h}
 function lst(){
  const L=items(iso(D(Y,M,1)),iso(D(Y,M+1,0))).sort((a,b)=>a.s.localeCompare(b.s));
@@ -392,9 +478,46 @@ $('#nd').onclick=e=>{if(e.target.closest('#nall'))return readAll();
  cur=n.gid;flt.clear();const d=pd(n.occ);Y=d.getFullYear();M=d.getMonth();render();viewEv(ev,n.occ)};
 $('#tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.id=='addg')return newg();cur=b.dataset.g;flt.clear();render()};
 $('#ppl').onclick=e=>{const b=e.target.closest('button');if(!b)return;const u=b.dataset.u;if(!u)flt.clear();else flt.has(u)?flt.delete(u):flt.add(u);render()};
-$('#body').onclick=e=>{const x=e.target.closest('[data-e]');
+$('#body').onclick=e=>{
+ if(deco){if(e.target.closest('.sk'))return;if(sel){sel=null;document.querySelectorAll('.sk.sel').forEach(x=>x.classList.remove('sel'));updateDeco();return}
+  const c=e.target.closest('.dc');if(c){const r=c.getBoundingClientRect();pickSticker(c.dataset.d,{x:clamp((e.clientX-r.left)/r.width,.1,.9),y:clamp((e.clientY-r.top)/r.width,.1,.7)})}return}
+ const x=e.target.closest('[data-e]');
  if(x){const v=(EV[x.dataset.g]||[]).find(q=>q.id==x.dataset.e);return v&&viewEv(v,x.dataset.s)}
  const c=e.target.closest('.dc');if(c&&cur!='all')editEv(null,c.dataset.d)};
+$('#dcb').onclick=()=>{deco=!deco;sel=null;render()};
+$('#dtb').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k,p=selP();
+ if(k=='done'){deco=false;sel=null;return render()}
+ if(!p)return;const ref=doc(db,'groups',p.gid,'deco',p.id);
+ try{if(k=='del'){sel=null;await deleteDoc(ref);return updateDeco()}
+  if(k=='add')return pickSticker(p.date,{x:.5,y:.35});
+  if(k=='sm'||k=='lg')return await updateDoc(ref,{w:clamp((p.w||.5)*(k=='lg'?1.15:1/1.15),.12,2.5)});
+  if(k=='rl'||k=='rr')return await updateDoc(ref,{rot:((p.rot||0)+(k=='rr'?15:-15))%360});
+  await zmove(p,k)}catch(zz){alert('실패: '+zz.code)}};
+const ptr=new Map();let g0=null;
+const rebase=()=>{g0.base={...g0.cur};g0.pts=[...ptr.values()].map(o=>({...o}));if(g0.pts.length>=2){const[a,b]=g0.pts;g0.d0=Math.hypot(b.x-a.x,b.y-a.y)||1;g0.a0=Math.atan2(b.y-a.y,b.x-a.x)}};
+$('#body').addEventListener('pointerdown',e=>{
+ if(!deco)return;const k=e.target.closest('.sk');if(!k)return;e.preventDefault();
+ const id=k.dataset.p,p=(DC[cur]||[]).find(q=>q.id==id);if(!p)return;
+ if(sel!=id){sel=id;document.querySelectorAll('.sk.sel').forEach(x=>x.classList.remove('sel'));k.classList.add('sel');updateDeco()}
+ try{k.setPointerCapture(e.pointerId)}catch{}
+ ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(!g0||g0.id!=id)g0={id,k,gid:p.gid,cw:k.closest('.dc').getBoundingClientRect().width,cur:{x:p.x,y:p.y,w:p.w||.5,rot:p.rot||0},moved:false};
+ dragging=true;rebase()});
+$('#body').addEventListener('pointermove',e=>{
+ if(!g0||!ptr.has(e.pointerId))return;ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ const c=g0.cur,b=g0.base,P=[...ptr.values()];
+ if(P.length>=2&&g0.pts.length>=2){const[a,z]=P,d=Math.hypot(z.x-a.x,z.y-a.y),an=Math.atan2(z.y-a.y,z.x-a.x),m0=[(g0.pts[0].x+g0.pts[1].x)/2,(g0.pts[0].y+g0.pts[1].y)/2],m=[(a.x+z.x)/2,(a.y+z.y)/2];
+  c.w=clamp(b.w*d/g0.d0,.12,2.5);c.rot=b.rot+(an-g0.a0)*180/Math.PI;c.x=b.x+(m[0]-m0[0])/g0.cw;c.y=b.y+(m[1]-m0[1])/g0.cw}
+ else if(P.length==1&&g0.pts.length==1){c.x=b.x+(P[0].x-g0.pts[0].x)/g0.cw;c.y=b.y+(P[0].y-g0.pts[0].y)/g0.cw}
+ else return;
+ if(!g0.moved&&Math.abs(c.x-b.x)+Math.abs(c.y-b.y)+Math.abs(c.w-b.w)+Math.abs(c.rot-b.rot)<.01)return;
+ g0.moved=true;c.x=clamp(c.x,-.5,1.5);c.y=clamp(c.y,-.5,1.5);
+ g0.k.style.left=c.x*100+'%';g0.k.style.top=c.y*100+'%';g0.k.style.width=c.w*100+'%';g0.k.style.transform=`translate(-50%,-50%) rotate(${c.rot}deg)`});
+const pup=async e=>{if(!g0||!ptr.has(e.pointerId))return;ptr.delete(e.pointerId);if(ptr.size>0){rebase();return}
+ const o=g0;g0=null;dragging=false;
+ if(o.moved)try{await updateDoc(doc(db,'groups',o.gid,'deco',o.id),{x:o.cur.x,y:o.cur.y,w:o.cur.w,rot:Math.round(o.cur.rot*10)/10})}catch(zz){alert('저장 실패: '+zz.code)}
+ pendR=false;render()};
+['pointerup','pointercancel'].forEach(t=>$('#body').addEventListener(t,pup));
 const mv=n=>{M+=n;if(M<0){M=11;Y--}if(M>11){M=0;Y++}render()};
 $('#pv').onclick=()=>mv(-1);$('#nx').onclick=()=>mv(1);
 $('#mt').onclick=ymPick;
@@ -407,7 +530,7 @@ $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
  try{await signInWithEmailAndPassword(auth,$('#li').value.trim().toLowerCase()+DOM,$('#lp').value)}
  catch{$('#le').textContent='아이디 또는 비밀번호를 확인해 주세요.'}};
 onAuthStateChanged(auth,async u=>{
- if(!u){me=null;stopG&&stopG();stopG=null;Object.values(unsub).forEach(f=>f());unsub={};Object.values(unsubN).forEach(f=>f());unsubN={};NT={};EV={};G=[];U={};cur='all';$('#nd').hidden=true;$('#ap').hidden=true;$('#lg').hidden=false;return}
+ if(!u){me=null;stopG&&stopG();stopG=null;Object.values(unsub).forEach(f=>f());unsub={};Object.values(unsubN).forEach(f=>f());unsubN={};NT={};Object.values(unsubS).forEach(f=>f());unsubS={};unsubD.forEach(f=>f());unsubD=[];dkey='';DC={};SKM={};deco=false;sel=null;EV={};G=[];U={};cur='all';$('#nd').hidden=true;$('#ap').hidden=true;$('#lg').hidden=false;return}
  me=u;const id=u.email.split('@')[0];
  let s=await getDoc(doc(db,'users',u.uid));
  if(!s.exists()){const p=PRE[id]||{};await setDoc(doc(db,'users',u.uid),{id,name:p.name||id,color:p.color||'#2F00FF'});s=await getDoc(doc(db,'users',u.uid))}
@@ -418,6 +541,8 @@ onAuthStateChanged(auth,async u=>{
   const ids=new Set(G.map(g=>g.id));
   Object.keys(unsub).forEach(k=>{if(!ids.has(k)){unsub[k]();delete unsub[k];delete EV[k]}});
   Object.keys(unsubN).forEach(k=>{if(!ids.has(k)){unsubN[k]();delete unsubN[k];delete NT[k]}});
+  Object.keys(unsubS).forEach(k=>{if(!ids.has(k)){unsubS[k]();delete unsubS[k];delete SKM[k]}});
+  G.forEach(g=>{if(!unsubS[g.id])unsubS[g.id]=onSnapshot(collection(db,'groups',g.id,'stickers'),q=>loadSk(g.id,q),()=>{})});
   G.forEach(g=>{if(!unsubN[g.id])unsubN[g.id]=onSnapshot(query(collection(db,'groups',g.id,'notifs'),orderBy('t','desc'),limit(30)),q=>{NT[g.id]=q.docs.map(d=>({id:d.id,gid:g.id,...d.data()}));drawBell()},()=>{})});
   G.forEach(g=>{if(!unsub[g.id])unsub[g.id]=onSnapshot(collection(db,'groups',g.id,'events'),q=>{EV[g.id]=q.docs.map(d=>({id:d.id,gid:g.id,...d.data()}));render()})});
   await Promise.all([...new Set(G.flatMap(g=>g.members))].filter(m=>!U[m]).map(async m=>{try{const x=await getDoc(doc(db,'users',m));if(x.exists())U[m]=x.data()}catch{}}));
