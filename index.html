@@ -69,7 +69,7 @@ input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);bo
 .cmt{display:flex;gap:8px}.dot{width:8px;height:8px;border-radius:4px;margin-top:7px;flex:none}
 .cmt small{color:var(--mut);margin-left:6px;font-size:11px}.ct{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:2px}
 .stk{max-width:120px;max-height:120px;display:block;margin-top:4px}
-.x{color:var(--mut);padding:0 6px}
+.x{color:var(--mut);padding:0 6px;font-size:12px}.ef{display:grid;gap:6px;margin-top:4px}.ef textarea{font-size:13px}.ef .bt{gap:6px}.cl2{color:var(--mut);padding:6px 10px;font-size:12px}.pr.sm{padding:6px 12px;font-size:12px}
 .cf{display:flex;gap:6px;align-items:center}.cf input#ct{flex:1;min-width:0;width:auto}.cf .pr{flex:none;white-space:nowrap}.ib{font-size:20px;padding:4px;flex:none}
 .ym{display:flex;gap:28px;justify-content:center;padding:6px 0}.stp{display:grid;justify-items:center;gap:6px}
 .stp input{width:92px;text-align:center;font-size:20px;-moz-appearance:textfield}.stp input::-webkit-inner-spin-button,.stp input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
@@ -260,13 +260,13 @@ function viewEv(e,os){
  <div id="cm" class="cm"></div><div id="cpv"></div>
  <div class="cf"><button type="button" id="ci" class="ib">🖼</button><input type="file" id="cfile" accept="image/*" hidden><input id="ct" placeholder="댓글" maxlength="500"><button type="button" id="cs" class="pr">등록</button></div>
  <div class="bt">${can?'<button type="button" id="dl" class="dg">삭제</button>':''}<button type="button" class="cl">닫기</button>${can?'<button type="button" id="ed" class="pr">수정</button>':''}</div></div>`);
- let rl=[],cl=[],img=null;
+ let rl=[],cl=[],img=null,ed=null;
  const cref=n=>collection(db,...base,n),mine=()=>rl.find(r=>r.uid==me.uid)?.list||[];
  const put=async nl=>{const ref=doc(db,...base,'reacts',me.uid+'_'+os),before=mine();try{nl.length?await setDoc(ref,{uid:me.uid,occ:os,list:nl.slice(0,24)}):await deleteDoc(ref);const ad=nl.filter(x=>!before.includes(x));if(ad.length)ping(e,os,{type:'react',emoji:ad.join(' ').slice(0,40)})}catch(z){alert('반응 실패: '+z.code)}};
  const tog=x=>{const m=mine();put(m.includes(x)?m.filter(i=>i!=x):[...m,x])};
  const drawRx=()=>{const m={};rl.forEach(r=>(r.list||[]).forEach(x=>(m[x]=m[x]||[]).push(r.uid)));
   $('#rx').innerHTML=Object.entries(m).map(([x,u])=>`<button type="button" class="rc ${u.includes(me.uid)?'on':''}" data-x="${esc(x)}" title="${esc(u.map(i=>U[i]?.name||'?').join(', '))}">${esc(x)} ${u.length}</button>`).join('')+'<button type="button" class="rc" id="rt">＋ 반응</button>'};
- const drawCm=()=>{$('#cm').innerHTML=cl.map(c=>`<div class="cmt"><span class="dot" style="background:${col(c.author)}"></span><div><b>${esc(U[c.author]?.name||'?')}</b><small>${tf(c.t)}</small>${c.author==me.uid?`<button type="button" class="x" data-c="${c.id}">✕</button>`:''}${c.text?`<div class="ct">${esc(c.text)}</div>`:''}${okImg(c.img)?`<img class="stk" src="${c.img}" alt="">`:''}</div></div>`).join('')||'<p class="mut">첫 댓글을 남겨보세요</p>';$('#cm').scrollTop=1e6};
+ const drawCm=()=>{$('#cm').innerHTML=cl.map(c=>`<div class="cmt"><span class="dot" style="background:${col(c.author)}"></span><div><b>${esc(U[c.author]?.name||'?')}</b><small>${tf(c.t)}${c.edited?' (수정됨)':''}</small>${c.author==me.uid&&ed!=c.id?`<button type="button" class="x ec" data-c="${c.id}">수정</button><button type="button" class="x" data-c="${c.id}">✕</button>`:''}${ed==c.id?`<div class="ef"><textarea id="et" rows="2" maxlength="500">${esc(c.text||'')}</textarea><div class="bt"><button type="button" class="cl2" data-a="ecx">취소</button><button type="button" class="pr sm" data-a="esv" data-c="${c.id}">저장</button></div></div>`:c.text?`<div class="ct">${esc(c.text)}</div>`:''}${okImg(c.img)?`<img class="stk" src="${c.img}" alt="">`:''}</div></div>`).join('')||'<p class="mut">첫 댓글을 남겨보세요</p>';if(!ed)$('#cm').scrollTop=1e6;else $('#et')?.focus()};
  drawRx();drawCm();
  vstop.push(onSnapshot(query(cref('reacts'),where('occ','==',os)),s=>{rl=s.docs.map(x=>x.data());drawRx()},()=>{}),
   onSnapshot(query(cref('comments'),where('occ','==',os)),s=>{cl=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>a.t-b.t);drawCm()},()=>{}));
@@ -275,7 +275,16 @@ function viewEv(e,os){
  $('#ri').oninput=e=>{const v=e.target.value;e.target.value='';
   const sg=window.Intl?.Segmenter?[...new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(v)].map(x=>x.segment):[...v];
   const em=sg.filter(x=>/\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(x));if(em.length)put([...new Set([...mine(),...em])])};
- $('#cm').onclick=async e=>{const b=e.target.closest('.x');if(b&&confirm('댓글을 삭제할까요?'))try{await deleteDoc(doc(db,...base,'comments',b.dataset.c))}catch(z){alert('삭제 실패: '+z.code)}};
+ $('#cm').onclick=async e=>{
+  const a=e.target.closest('[data-a]');
+  if(a&&a.dataset.a=='ecx'){ed=null;return drawCm()}
+  if(a&&a.dataset.a=='esv'){const c=cl.find(x=>x.id==a.dataset.c),t=$('#et').value.trim();
+   if(!t&&!okImg(c?.img))return alert('내용을 입력해 주세요');
+   if(t==(c?.text||'')){ed=null;return drawCm()}
+   try{await updateDoc(doc(db,...base,'comments',a.dataset.c),{text:t,edited:Date.now()});ed=null;drawCm()}catch(z){alert('수정 실패: '+z.code)}return}
+  const b=e.target.closest('.x');if(!b)return;
+  if(b.classList.contains('ec')){ed=b.dataset.c;return drawCm()}
+  if(confirm('댓글을 삭제할까요?'))try{await deleteDoc(doc(db,...base,'comments',b.dataset.c))}catch(z){alert('삭제 실패: '+z.code)}};
  $('#ci').onclick=()=>$('#cfile').click();
  $('#cfile').onchange=async()=>{const f=$('#cfile').files[0];if(!f)return;try{img=await stk(f);$('#cpv').innerHTML=`<img class="stk" src="${img}" alt=""><button type="button" class="x" id="cx">✕</button>`}catch{alert('이미지를 불러올 수 없어요')}$('#cfile').value=''};
  $('#cpv').onclick=e=>{if(e.target.id=='cx'){img=null;$('#cpv').innerHTML=''}};
