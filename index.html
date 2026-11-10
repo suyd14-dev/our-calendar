@@ -22,8 +22,21 @@ input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);bo
 .pr,#lf button{background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px}
 #le,.er{color:var(--red);font-size:12px;min-height:16px}
 #ap{max-width:720px;margin:0 auto;padding-bottom:84px}
-#tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--ln);background:#fff;position:sticky;top:0;z-index:5}
-#tabs button{padding:12px 14px;white-space:nowrap;color:var(--mut);border-bottom:2px solid transparent}
+#top{display:flex;align-items:stretch;border-bottom:1px solid var(--ln);background:#fff;position:sticky;top:0;z-index:20}
+#tabs{display:flex;gap:2px;overflow-x:auto;flex:1;min-width:0}
+#bell{position:relative;flex:none;width:46px;display:grid;place-items:center;color:var(--blu)}
+#bell svg{width:22px;height:22px;fill:currentColor}
+#bd{position:absolute;top:10px;right:11px;width:9px;height:9px;border-radius:50%;background:#e53935;border:2px solid #fff;box-sizing:content-box}
+#nd{position:absolute;right:6px;top:100%;margin-top:4px;width:min(94vw,360px);max-height:70vh;overflow-y:auto;background:#fff;border:1px solid var(--ln);border-radius:12px;box-shadow:0 8px 24px #0002}
+.nh{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--ln);position:sticky;top:0;background:#fff}
+.nh b{font-size:14px}.nh button{font-size:12px;color:var(--blu);padding:4px 0}
+.ni{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid var(--ln);cursor:pointer;align-items:flex-start}
+.ni.u{background:#f6f4fe}
+.ni .dt{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none;background:transparent}.ni.u .dt{background:#e53935}
+.ni .tx{flex:1;min-width:0;font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.ni .tx small{display:block;color:var(--mut);font-size:11px;margin-top:2px}
+.ni .pv{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+#tabs button{padding:12px 14px;flex:none;white-space:nowrap;color:var(--mut);border-bottom:2px solid transparent}
 #tabs button.on{color:var(--ink);font-weight:600;border-color:var(--blu)}
 #hero{aspect-ratio:3/1;background:#e8e7ed center/cover;position:relative;display:grid;place-items:center;font-weight:600;color:#6d6b78}
 #dd{position:absolute;right:8px;bottom:6px;font-size:11px;padding:2px 9px;border-radius:10px;background:rgba(255,255,255,.88);color:#4a2f66}
@@ -100,7 +113,7 @@ input[type=color]{height:40px;padding:3px}
 <input id="lp" type="password" placeholder="비밀번호" autocomplete="current-password" required>
 <button>로그인</button><p id="le"></p></form></div>
 <div id="ap" hidden>
-<nav id="tabs"></nav><div id="hero"></div>
+<div id="top"><nav id="tabs"></nav><button id="bell" aria-label="알림"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a1.5 1.5 0 0 0-1.5 1.5v.7C7.9 4.9 6 7.2 6 10v4.2l-1.7 2.3A1 1 0 0 0 5.1 18h13.8a1 1 0 0 0 .8-1.5L18 14.2V10c0-2.8-1.9-5.1-4.5-5.8v-.7A1.5 1.5 0 0 0 12 2zm-2.6 17a2.6 2.6 0 0 0 5.2 0H9.4z"/></svg><i id="bd" hidden></i></button><div id="nd" hidden></div></div><div id="hero"></div>
 <div id="bar"><button id="pv">‹</button><button id="mt"></button><button id="nx">›</button><button id="td">오늘</button><span></span><button id="vw">목록</button><button id="set">설정</button></div>
 <div id="ppl"></div><div id="body"></div><button id="fab" aria-label="일정 추가">＋</button>
 </div>
@@ -108,7 +121,7 @@ input[type=color]{height:40px;padding:3px}
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,query,where,getDocs,onSnapshot,writeBatch}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,deleteDoc,collection,query,where,getDocs,onSnapshot,writeBatch,orderBy,limit}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ▼▼ Firebase 콘솔의 웹 앱 설정값을 여기에 붙여넣으세요 ▼▼ */
 const CFG={apiKey:"AIzaSyCKeLkPWjpnYhBjyuOt5r23N3UfK0EOxts",authDomain:"our-calendar-81a3c.firebaseapp.com",projectId:"our-calendar-81a3c",appId:"1:444260418366:web:29fdc18aa56dd7d71d226f"};
@@ -129,6 +142,16 @@ const diff=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
 const wk=s=>pd(s).getDay();
 const DOW='일월화수목금토';
 const QE=['❤️','👍','😂','😮','😢','🎉'];
+let NT={},unsubN={};
+const urd=n=>{const u=U[me?.uid]||{};return n.t>(u.nAll||0)&&!((u.nRead||{})[n.id]>=n.t)};
+const nlist=()=>Object.values(NT).flat().filter(n=>n.actor!=me.uid).sort((a,b)=>b.t-a.t).slice(0,50);
+function drawBell(){if(!me)return;const L=nlist(),k=L.some(urd);$('#bd').hidden=!k;$('#bell').style.color=U[me.uid]?.color||'';if(!$('#nd').hidden)drawNd(L)}
+function drawNd(L){L=L||nlist();
+ const tx=n=>{const w=esc(U[n.actor]?.name||'?'),t=esc(n.title||'일정');return n.type=='react'?`<b>${w}</b>님이 <b>${t}</b>에 ${esc(n.emoji||'')} 반응을 남겼어요`:`<b>${w}</b>님이 <b>${t}</b>에 댓글을 남겼어요${n.text?`<span class="pv">${esc(n.text)}</span>`:n.img?'<span class="pv">스티커</span>':''}`};
+ $('#nd').innerHTML=`<div class="nh"><b>알림</b><button type="button" id="nall">모두 읽음</button></div>`+(L.length?L.map(n=>`<div class="ni ${urd(n)?'u':''}" data-n="${esc(n.id)}" data-g="${esc(n.gid)}"><span class="dt"></span><div class="tx">${tx(n)}<small>${esc(G.find(g=>g.id==n.gid)?.name||'')} · ${tf(n.t)}</small></div></div>`).join(''):'<p class="em" style="padding:28px 0">새 알림이 없어요</p>')}
+const mkRead=async(ids)=>{const u=U[me.uid],up={};ids.forEach(n=>{up['nRead.'+n.id]=n.t;u.nRead={...(u.nRead||{}),[n.id]:n.t}});try{await updateDoc(doc(db,'users',me.uid),up)}catch{}drawBell()};
+const readAll=async()=>{const L=nlist(),u=U[me.uid],t=Math.max(Date.now(),...L.map(n=>n.t));u.nAll=t;u.nRead={};try{await updateDoc(doc(db,'users',me.uid),{nAll:t,nRead:{}})}catch{}drawBell()};
+const ping=(e,os,d)=>{const b=collection(db,'groups',e.gid,'notifs'),o={actor:me.uid,eid:e.id,occ:os,title:e.title||'',t:Date.now(),...d};try{d.type=='react'?setDoc(doc(b,'r_'+me.uid+'_'+e.id+'_'+os),o).catch(()=>{}):addDoc(b,o).catch(()=>{})}catch{}};
 let vstop=[];const stopV=()=>{vstop.forEach(f=>f());vstop=[]};
 const tf=t=>{const d=new Date(t);return`${P(d.getMonth()+1)}.${P(d.getDate())} ${P(d.getHours())}:${P(d.getMinutes())}`};
 const okImg=s=>/^data:image\/(png|webp|jpeg|gif);base64,[A-Za-z0-9+\/=]+$/.test(s||'');
@@ -191,7 +214,7 @@ const col=u=>U[u]?.color||'#999';
 
 /* 화면 그리기 */
 const applyMc=()=>document.documentElement.style.setProperty('--mc',U[me?.uid]?.memoColor||'#d23b3b');
-function render(){applyMc();
+function render(){applyMc();drawBell();
  const g=G.find(x=>x.id==cur);
  $('#tabs').innerHTML=`<button data-g="all" class="${cur=='all'?'on':''}">전체</button>`+G.map(x=>`<button data-g="${x.id}" class="${cur==x.id?'on':''}">${x.icon||''} ${esc(x.name)}</button>`).join('')+'<button id="addg">＋ 그룹</button>';
  const h=$('#hero');h.hidden=!g;
@@ -239,7 +262,7 @@ function viewEv(e,os){
  <div class="bt">${can?'<button type="button" id="dl" class="dg">삭제</button>':''}<button type="button" class="cl">닫기</button>${can?'<button type="button" id="ed" class="pr">수정</button>':''}</div></div>`);
  let rl=[],cl=[],img=null;
  const cref=n=>collection(db,...base,n),mine=()=>rl.find(r=>r.uid==me.uid)?.list||[];
- const put=async nl=>{const ref=doc(db,...base,'reacts',me.uid+'_'+os);try{nl.length?await setDoc(ref,{uid:me.uid,occ:os,list:nl.slice(0,24)}):await deleteDoc(ref)}catch(z){alert('반응 실패: '+z.code)}};
+ const put=async nl=>{const ref=doc(db,...base,'reacts',me.uid+'_'+os),before=mine();try{nl.length?await setDoc(ref,{uid:me.uid,occ:os,list:nl.slice(0,24)}):await deleteDoc(ref);const ad=nl.filter(x=>!before.includes(x));if(ad.length)ping(e,os,{type:'react',emoji:ad.join(' ').slice(0,40)})}catch(z){alert('반응 실패: '+z.code)}};
  const tog=x=>{const m=mine();put(m.includes(x)?m.filter(i=>i!=x):[...m,x])};
  const drawRx=()=>{const m={};rl.forEach(r=>(r.list||[]).forEach(x=>(m[x]=m[x]||[]).push(r.uid)));
   $('#rx').innerHTML=Object.entries(m).map(([x,u])=>`<button type="button" class="rc ${u.includes(me.uid)?'on':''}" data-x="${esc(x)}" title="${esc(u.map(i=>U[i]?.name||'?').join(', '))}">${esc(x)} ${u.length}</button>`).join('')+'<button type="button" class="rc" id="rt">＋ 반응</button>'};
@@ -256,7 +279,7 @@ function viewEv(e,os){
  $('#ci').onclick=()=>$('#cfile').click();
  $('#cfile').onchange=async()=>{const f=$('#cfile').files[0];if(!f)return;try{img=await stk(f);$('#cpv').innerHTML=`<img class="stk" src="${img}" alt=""><button type="button" class="x" id="cx">✕</button>`}catch{alert('이미지를 불러올 수 없어요')}$('#cfile').value=''};
  $('#cpv').onclick=e=>{if(e.target.id=='cx'){img=null;$('#cpv').innerHTML=''}};
- const send=async()=>{const t=$('#ct').value.trim();if(!t&&!img)return;try{await addDoc(cref('comments'),{author:me.uid,occ:os,text:t,img:img||'',t:Date.now()});$('#ct').value='';img=null;$('#cpv').innerHTML=''}catch(z){alert('등록 실패: '+z.code)}};
+ const send=async()=>{const t=$('#ct').value.trim();if(!t&&!img)return;try{await addDoc(cref('comments'),{author:me.uid,occ:os,text:t,img:img||'',t:Date.now()});ping(e,os,{type:'cmt',text:t.slice(0,80),img:!!img});$('#ct').value='';img=null;$('#cpv').innerHTML=''}catch(z){alert('등록 실패: '+z.code)}};
  $('#cs').onclick=send;$('#ct').onkeydown=e=>{if(e.key=='Enter'&&!e.isComposing){e.preventDefault();send()}};
  if(can){$('#ed').onclick=()=>editEv(e,null,os);$('#dl').onclick=()=>delEv(e,os)}}
 function delEv(e,os){
@@ -349,6 +372,15 @@ function newg(){
    cur=r.id;d.close()}catch(z){er.textContent='만들기 실패: '+z.code}}}
 
 /* 이벤트 연결 */
+$('#bell').onclick=e=>{e.stopPropagation();const n=$('#nd');n.hidden=!n.hidden;if(!n.hidden)drawNd()};
+document.addEventListener('click',e=>{if(!$('#nd').hidden&&!e.target.closest('#nd')&&!e.target.closest('#bell'))$('#nd').hidden=true});
+$('#nd').onclick=e=>{if(e.target.closest('#nall'))return readAll();
+ const it=e.target.closest('.ni');if(!it)return;
+ const n=(NT[it.dataset.g]||[]).find(x=>x.id==it.dataset.n);if(!n)return;
+ $('#nd').hidden=true;mkRead([n]);
+ const ev=(EV[n.gid]||[]).find(x=>x.id==n.eid);
+ if(!ev)return alert('삭제된 일정이에요');
+ cur=n.gid;flt.clear();const d=pd(n.occ);Y=d.getFullYear();M=d.getMonth();render();viewEv(ev,n.occ)};
 $('#tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.id=='addg')return newg();cur=b.dataset.g;flt.clear();render()};
 $('#ppl').onclick=e=>{const b=e.target.closest('button');if(!b)return;const u=b.dataset.u;if(!u)flt.clear();else flt.has(u)?flt.delete(u):flt.add(u);render()};
 $('#body').onclick=e=>{const x=e.target.closest('[data-e]');
@@ -366,7 +398,7 @@ $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
  try{await signInWithEmailAndPassword(auth,$('#li').value.trim().toLowerCase()+DOM,$('#lp').value)}
  catch{$('#le').textContent='아이디 또는 비밀번호를 확인해 주세요.'}};
 onAuthStateChanged(auth,async u=>{
- if(!u){me=null;stopG&&stopG();stopG=null;Object.values(unsub).forEach(f=>f());unsub={};EV={};G=[];U={};cur='all';$('#ap').hidden=true;$('#lg').hidden=false;return}
+ if(!u){me=null;stopG&&stopG();stopG=null;Object.values(unsub).forEach(f=>f());unsub={};Object.values(unsubN).forEach(f=>f());unsubN={};NT={};EV={};G=[];U={};cur='all';$('#nd').hidden=true;$('#ap').hidden=true;$('#lg').hidden=false;return}
  me=u;const id=u.email.split('@')[0];
  let s=await getDoc(doc(db,'users',u.uid));
  if(!s.exists()){const p=PRE[id]||{};await setDoc(doc(db,'users',u.uid),{id,name:p.name||id,color:p.color||'#2F00FF'});s=await getDoc(doc(db,'users',u.uid))}
@@ -376,6 +408,8 @@ onAuthStateChanged(auth,async u=>{
   G=sn.docs.map(d=>({id:d.id,...d.data()})).filter(g=>!g.personal).sort((a,b)=>a.name.localeCompare(b.name));
   const ids=new Set(G.map(g=>g.id));
   Object.keys(unsub).forEach(k=>{if(!ids.has(k)){unsub[k]();delete unsub[k];delete EV[k]}});
+  Object.keys(unsubN).forEach(k=>{if(!ids.has(k)){unsubN[k]();delete unsubN[k];delete NT[k]}});
+  G.forEach(g=>{if(!unsubN[g.id])unsubN[g.id]=onSnapshot(query(collection(db,'groups',g.id,'notifs'),orderBy('t','desc'),limit(30)),q=>{NT[g.id]=q.docs.map(d=>({id:d.id,gid:g.id,...d.data()}));drawBell()},()=>{})});
   G.forEach(g=>{if(!unsub[g.id])unsub[g.id]=onSnapshot(collection(db,'groups',g.id,'events'),q=>{EV[g.id]=q.docs.map(d=>({id:d.id,gid:g.id,...d.data()}));render()})});
   await Promise.all([...new Set(G.flatMap(g=>g.members))].filter(m=>!U[m]).map(async m=>{try{const x=await getDoc(doc(db,'users',m));if(x.exists())U[m]=x.data()}catch{}}));
   if(cur!='all'&&!ids.has(cur))cur='all';
