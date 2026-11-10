@@ -54,7 +54,7 @@ input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);bo
 .li .ev .memo{display:block;margin-top:5px;padding-top:5px;border-top:1px solid color-mix(in srgb,var(--fg,var(--ink)) 18%,transparent);font-size:12px;line-height:1.5;color:var(--fg,var(--ink));white-space:pre-wrap;overflow-wrap:anywhere}
 .em{text-align:center;color:var(--mut);padding:48px 0}
 #fab{position:fixed;right:18px;bottom:22px;width:54px;height:54px;border-radius:27px;background:var(--blu);color:#fff;font-size:26px;box-shadow:0 4px 14px #2f00ff44}
-dialog{border:0;border-radius:14px;padding:18px;width:min(92vw,420px);max-height:90vh;color:var(--ink)}
+dialog{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;border:0;border-radius:14px;padding:18px;width:min(92vw,420px);max-height:90vh;overflow-y:auto;color:var(--ink)}
 dialog::backdrop{background:#0006}
 dialog form{display:grid;gap:10px}
 dialog h3{font-size:16px}dialog h4{font-size:13px;margin-top:6px}
@@ -218,6 +218,7 @@ function resize(file){return new Promise(r=>{const i=new Image();i.onload=()=>{c
 function sets(){
  const g=G.find(x=>x.id==cur),u=U[me.uid];let ic=g?.icon;
  const d=modal(`<form><h3>설정</h3>
+ <label>사용자 이름<input name="displayName" maxlength="30" value="${esc(u.name||"")}" placeholder="페이지에 표시할 이름" required></label>
  <label>내 색상<input type="color" name="color" value="${u.color}"></label>
  <label>메모 표시 색상 (라벨 우측 상단 꼭지)<input type="color" name="mcolor" value="${u.memoColor||'#d23b3b'}"></label>
  <label>글꼴<select name="font"><option value="s">시스템 글꼴</option><option value="d">코펍 돋움</option><option value="b">코펍 바탕</option></select></label>
@@ -231,7 +232,7 @@ function sets(){
  $('#lo').onclick=()=>{d.close();signOut(auth)};
  f.onsubmit=async ev=>{ev.preventDefault();
   try{fnt(f.font.value);
-   const up={};if(f.color.value!=u.color)up.color=f.color.value;if(f.mcolor.value!=(u.memoColor||'#d23b3b'))up.memoColor=f.mcolor.value;if(Object.keys(up).length){await updateDoc(doc(db,'users',me.uid),up);Object.assign(u,up)}
+   const up={};if(f.displayName.value.trim()!=(u.name||""))up.name=f.displayName.value.trim();if(f.color.value!=u.color)up.color=f.color.value;if(f.mcolor.value!=(u.memoColor||'#d23b3b'))up.memoColor=f.mcolor.value;if(Object.keys(up).length){await updateDoc(doc(db,'users',me.uid),up);Object.assign(u,up)}
    if(g){const o={icon:ic,dday:f.dday.value||null};if(f.img.files[0])o.header=await resize(f.img.files[0]);await updateDoc(doc(db,'groups',g.id),o)}
    d.close();render()}catch(z){alert('저장 실패: '+z.code)}}}
 function newg(){
