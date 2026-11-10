@@ -161,7 +161,7 @@ function render(){
  $('#mt').textContent=`${Y}년 ${M+1}월`;
  $('#vw').textContent=view=='cal'?'목록':'월간';
  $('#fab').hidden=!g;
- view=='cal'?cal():lst()}
+ if(!G.length)$('#body').innerHTML='<p class="em">위의 ＋ 그룹을 눌러 첫 그룹을 만들어 보세요</p>';else view=='cal'?cal():lst()}
 function cal(){
  const f=D(Y,M,1);f.setDate(1-f.getDay());const from=iso(f),to=add(from,41),mp={},today=iso(new Date());
  items(from,to).forEach(it=>{for(let s=it.s<from?from:it.s;s<=it.t&&s<=to;s=add(s,1))(mp[s]=mp[s]||[]).push(it)});
@@ -252,11 +252,9 @@ onAuthStateChanged(auth,async u=>{
  let s=await getDoc(doc(db,'users',u.uid));
  if(!s.exists()){const p=PRE[id]||{};await setDoc(doc(db,'users',u.uid),{id,name:p.name||id,color:p.color||'#2F00FF'});s=await getDoc(doc(db,'users',u.uid))}
  U[u.uid]=s.data();
- const pg=doc(db,'groups','p_'+u.uid);let ex=false;try{ex=(await getDoc(pg)).exists()}catch{}
- if(!ex)await setDoc(pg,{name:'내 일정',icon:'🌙',members:[u.uid],personal:true});
  $('#lg').hidden=true;$('#ap').hidden=false;
  stopG=onSnapshot(query(collection(db,'groups'),where('members','array-contains',u.uid)),async sn=>{
-  G=sn.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.personal?1:0)-(a.personal?1:0)||a.name.localeCompare(b.name));
+  G=sn.docs.map(d=>({id:d.id,...d.data()})).filter(g=>!g.personal).sort((a,b)=>a.name.localeCompare(b.name));
   const ids=new Set(G.map(g=>g.id));
   Object.keys(unsub).forEach(k=>{if(!ids.has(k)){unsub[k]();delete unsub[k];delete EV[k]}});
   G.forEach(g=>{if(!unsub[g.id])unsub[g.id]=onSnapshot(collection(db,'groups',g.id,'events'),q=>{EV[g.id]=q.docs.map(d=>({id:d.id,gid:g.id,...d.data()}));render()})});
