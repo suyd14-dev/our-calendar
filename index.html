@@ -60,6 +60,7 @@ input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);bo
 .dl{position:absolute;left:0;top:0;width:100%;padding-bottom:100%;pointer-events:none}
 .sk{position:absolute;max-width:none;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none}
 body.deco .sk{pointer-events:auto;touch-action:none;cursor:grab}
+.fg .n.dk:not(.t){text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 -1px 0 #fff,0 1px 0 #fff,-1px 0 0 #fff,1px 0 0 #fff}
 .sk.sel{outline:1.5px dashed var(--blu);outline-offset:2px}
 body.deco .fg .ev{pointer-events:none;opacity:.5}body.deco .fg small{opacity:.5}
 body.deco #ap{padding-bottom:190px}
@@ -178,11 +179,21 @@ const ping=(e,os,d)=>{const b=collection(db,'groups',e.gid,'notifs'),o={actor:me
 /* ===== 칸 꾸미기 ===== */
 let deco=false,sel=null,dragging=false,pendR=false,DC={},SKM={},URLS={},unsubS={},unsubD=[],dkey='',libRedraw=null;
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const IMGS={},DKC=new Map();
+function darkAt(list){
+ if(!list.length)return false;
+ const key=list.map(p=>[p.sid,p.x,p.y,p.w,p.rot||0].join()).join('|');
+ if(DKC.has(key))return DKC.get(key);
+ const U=80,N=36,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,N,N);let ready=true;
+ for(const p of list){const im=IMGS[p.sid];if(!im){ready=false;continue}
+  const w=p.w*U,h=w*im.naturalHeight/im.naturalWidth;x.save();x.translate((p.x-.05)*U,(p.y-.05)*U);x.rotate((p.rot||0)*Math.PI/180);x.drawImage(im,-w/2,-h/2,w,h);x.restore()}
+ const d=x.getImageData(0,0,N,N).data;let t=0;for(let i=0;i<d.length;i+=4)t+=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];
+ const dark=t/(N*N)/255<.6;if(ready)DKC.set(key,dark);return dark}
 const selP=()=>cur=='all'?null:(DC[cur]||[]).find(p=>p.id==sel);
 function subDeco(from,to){const gs=cur=='all'?G:G.filter(g=>g.id==cur),key=gs.map(g=>g.id).join()+from+to;if(key==dkey)return;dkey=key;unsubD.forEach(f=>f());unsubD=[];
  gs.forEach(g=>unsubD.push(onSnapshot(query(collection(db,'groups',g.id,'deco'),where('date','>=',from),where('date','<=',to)),q=>{DC[g.id]=q.docs.map(d=>({id:d.id,gid:g.id,...d.data()}));render()},()=>{})))}
 function loadSk(gid,q){const m={};q.docs.forEach(d=>{const v=d.data();if(!okImg(v.img))return;m[d.id]={id:d.id,...v};
-  if(!URLS[d.id])fetch(v.img).then(r=>r.blob()).then(b=>{URLS[d.id]=URL.createObjectURL(b);render()}).catch(()=>{})});SKM[gid]=m;libRedraw&&libRedraw();render()}
+  if(!URLS[d.id])fetch(v.img).then(r=>r.blob()).then(b=>{URLS[d.id]=URL.createObjectURL(b);const im=new Image();im.onload=()=>{IMGS[d.id]=im;render()};im.src=URLS[d.id];render()}).catch(()=>{})});SKM[gid]=m;libRedraw&&libRedraw();render()}
 function updateDeco(){const b=$('#dtb');b.hidden=!deco;$('#dcb').classList.toggle('on',deco);$('#dcb').textContent=deco?'꾸미기 끝':'꾸미기';document.body.classList.toggle('deco',deco);if(!deco)return;
  b.innerHTML=selP()?`<div class="r1"><button data-k="top">⤒ 맨 위로</button><button data-k="up">↑ 위로</button><button data-k="down">↓ 아래로</button><button data-k="bot">⤓ 맨 밑으로</button></div><div class="r1"><button data-k="sm">－ 작게</button><button data-k="lg">＋ 크게</button><button data-k="rl">↺ 회전</button><button data-k="rr">↻ 회전</button></div><div class="r2"><button data-k="add">＋ 스티커 추가</button><button data-k="del" class="dg">🗑 삭제</button><button data-k="done" class="pr">완료</button></div>`
  :`<p>빈 곳을 눌러 스티커를 놓고, 스티커를 눌러 편집하세요</p><div class="r2"><button data-k="done" class="pr">꾸미기 끝</button></div>`}
@@ -314,6 +325,7 @@ function cal(){
  const f=D(Y,M,1);f.setDate(1-f.getDay());const from=iso(f),today=iso(new Date()),all=items(from,add(from,41)),cw=($('#body').clientWidth||360)/7,cap=Math.max(1,Math.floor((cw*1.8-28)/20));
  subDeco(from,add(from,41));
  const dm={};(cur=='all'?G:G.filter(g=>g.id==cur)).forEach(g=>(DC[g.id]||[]).forEach(p=>{const u=URLS[p.sid];if(u&&SKM[g.id]?.[p.sid])(dm[p.date]=dm[p.date]||[]).push({...p,u})}));
+ const dk={};Object.keys(dm).forEach(k=>{dm[k].sort((a,b)=>(a.z||0)-(b.z||0)||a.t-b.t);dk[k]=darkAt(dm[k])});
  const dls=s=>`<div class="dl">${(dm[s]||[]).sort((a,b)=>(a.z||0)-(b.z||0)||a.t-b.t).map(p=>`<img class="sk${p.id==sel?' sel':''}" data-p="${p.id}" src="${p.u}" alt="" draggable="false" style="left:${p.x*100}%;top:${p.y*100}%;width:${p.w*100}%;transform:translate(-50%,-50%) rotate(${p.rot||0}deg);z-index:${p.z||1}">`).join('')}</div>`;
  let h='<div class="wd">'+[...DOW].map((c,i)=>`<i class="${i?'':'r'}">${c}</i>`).join('')+'</div>';
  for(let w=0;w<6;w++){
@@ -326,7 +338,7 @@ function cal(){
    if(l>=lim){for(let k=g.a;k<=g.b;k++)hid[k]++;return}
    const it=g.it;
    bars+=`<div class="ev cc${mem(it)?' mm':''}${it.s<ws?' pl':''}${it.t>we?' nx':''}" data-e="${it.e.id}" data-g="${it.g.id}" data-s="${it.s}" style="grid-column:${g.a+1}/${g.b+2};grid-row:${l+2};${sty(it)}"><span class="tt">${cur=='all'&&it.g.icon?it.g.icon+' ':''}${esc(it.e.title)}</span>${!it.e.allDay&&it.e.st&&it.s>=ws?`<span class="tm">${it.e.st}</span>`:''}</div>`});
-  h+=`<div class="wk"><div class="bg">${days.map(s=>`<div class="dc ${pd(s).getMonth()!=M?'o':''}" data-d="${s}">${dls(s)}</div>`).join('')}</div><div class="fg" style="grid-template-rows:26px repeat(${lim+1},20px)">`+days.map((s,i)=>`<span class="n ${wk(s)==0||isHol(s)?'r':''} ${s==today?'t':''} ${pd(s).getMonth()!=M?'o':''}" style="grid-column:${i+1};grid-row:1">${pd(s).getDate()}</span>`).join('')+bars+hid.map((n,i)=>n?`<small style="grid-column:${i+1};grid-row:${lim+2}">+${n}</small>`:'').join('')+'</div></div>'}
+  h+=`<div class="wk"><div class="bg">${days.map(s=>`<div class="dc ${pd(s).getMonth()!=M?'o':''}" data-d="${s}">${dls(s)}</div>`).join('')}</div><div class="fg" style="grid-template-rows:26px repeat(${lim+1},20px)">`+days.map((s,i)=>`<span class="n ${wk(s)==0||isHol(s)?'r':''} ${s==today?'t':''} ${dk[s]?'dk':''} ${pd(s).getMonth()!=M?'o':''}" style="grid-column:${i+1};grid-row:1">${pd(s).getDate()}</span>`).join('')+bars+hid.map((n,i)=>n?`<small style="grid-column:${i+1};grid-row:${lim+2}">+${n}</small>`:'').join('')+'</div></div>'}
  $('#body').innerHTML=h}
 function lst(){
  const L=items(iso(D(Y,M,1)),iso(D(Y,M+1,0))).sort((a,b)=>a.s.localeCompare(b.s));
