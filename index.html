@@ -92,6 +92,7 @@ body.deco #ap{padding-bottom:190px}
 .fg small{font-size:10px;color:var(--mut);margin:0 4px;align-self:end}
 #td{border:1px solid var(--ln);background:#fff;font-size:12px}
 .rx{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+img.emoji{height:1.2em;width:1.2em;margin:0 .04em;vertical-align:-.22em;display:inline-block;pointer-events:none;-webkit-user-drag:none;user-select:none}
 .rc{padding:2px 9px;border:1px solid var(--ln);border-radius:14px;background:#fff;font-size:14px}.rc.on{border-color:var(--blu);background:#f0eefe}
 .rp{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.rp button{font-size:20px;padding:2px 4px}.rp input{flex:1;min-width:140px}
 .cm{display:grid;gap:10px;max-height:260px;overflow-y:auto}
@@ -149,6 +150,8 @@ input[type=color]{height:40px;padding:3px}
 <div id="dtb" hidden></div>
 <dialog id="dlg"></dialog>
 <dialog id="dlg2"></dialog>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/@twemoji/api@15.1.0/dist/twemoji.min.js" crossorigin="anonymous"></script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -607,4 +610,10 @@ onAuthStateChanged(auth,async u=>{
   await Promise.all([...new Set(G.flatMap(g=>g.members))].filter(m=>!U[m]).map(async m=>{try{const x=await getDoc(doc(db,'users',m));if(x.exists())U[m]=x.data()}catch{}}));
   if(cur!='all'&&!ids.has(cur))cur='all';
   render()})});
+
+/* 평면 이모지(Twemoji): 화면에 보이는 이모지 글자를 이미지로 바꿔 표시. 저장 데이터는 그대로 */
+(()=>{const tw=window.twemoji;if(!tw)return;let fail=false,q=0;
+ const B='https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/';
+ const run=()=>{q=0;if(fail)return;try{tw.parse(document.body,{className:'emoji',callback:i=>fail?false:B+i+'.svg',onerror:function(){fail=true;if(this.parentNode)this.parentNode.replaceChild(document.createTextNode(this.alt),this)}})}catch{}};
+ new MutationObserver(()=>{if(!q){q=1;requestAnimationFrame(run)}}).observe(document.body,{childList:true,subtree:true,characterData:true});run()})();
 </script></body></html>
