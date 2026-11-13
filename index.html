@@ -92,6 +92,7 @@ body.deco #ap{padding-bottom:190px}
 .fg small{font-size:10px;color:var(--mut);margin:0 4px;align-self:end}
 #td{border:1px solid var(--ln);background:#fff;font-size:12px}
 .rx{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+@keyframes sw{from{transform:translateX(var(--sx));opacity:.3}to{transform:none;opacity:1}}#body.sw{animation:sw .2s ease-out}
 img.emoji{height:1.2em;width:1.2em;margin:0 .04em;vertical-align:-.22em;display:inline-block;pointer-events:none;-webkit-user-drag:none;user-select:none}
 .rc{padding:2px 9px;border:1px solid var(--ln);border-radius:14px;background:#fff;font-size:14px}.rc.on{border-color:var(--blu);background:#f0eefe}
 .rp{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.rp button{font-size:20px;padding:2px 4px}.rp input{flex:1;min-width:140px}
@@ -611,6 +612,16 @@ onAuthStateChanged(auth,async u=>{
   if(cur!='all'&&!ids.has(cur))cur='all';
   render()})});
 
+/* 좌우 스와이프로 그룹 탭 넘기기 (전체 → 그룹들, 양 끝에서는 멈춤) */
+(()=>{const bd=$('#body');let t0=null;
+ bd.addEventListener('touchstart',e=>{t0=null;if(deco||e.touches.length!=1||document.querySelector('dialog[open]'))return;const t=e.touches[0];if(t.clientX<24||t.clientX>innerWidth-24)return;t0={x:t.clientX,y:t.clientY,t:Date.now()}},{passive:true});
+ bd.addEventListener('touchmove',e=>{if(e.touches.length>1)t0=null},{passive:true});
+ bd.addEventListener('touchend',e=>{const s=t0;t0=null;if(!s||deco)return;const t=e.changedTouches[0],dx=t.clientX-s.x,dy=t.clientY-s.y;
+  if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.8||Date.now()-s.t>800)return;
+  const ids=['all',...G.map(g=>g.id)],i=ids.indexOf(cur),n=i+(dx<0?1:-1);if(i<0||n<0||n>=ids.length)return;
+  cur=ids[n];flt.clear();render();
+  bd.style.setProperty('--sx',(dx<0?40:-40)+'px');bd.classList.remove('sw');void bd.offsetWidth;bd.classList.add('sw');
+  $('#tabs .on')?.scrollIntoView({inline:'center',block:'nearest'})},{passive:true})})();
 /* 평면 이모지(Twemoji): 화면에 보이는 이모지 글자를 이미지로 바꿔 표시. 저장 데이터는 그대로 */
 (()=>{const tw=window.twemoji;if(!tw)return;let fail=false,q=0;
  const B='https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/';
